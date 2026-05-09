@@ -1,23 +1,19 @@
 /* ==========================================================
- * TaskBoard プロトタイプ Step 2（フェーズ2範囲）
+ * TaskBoard プロトタイプ Step 3（フェーズ3：認証付き）
  * ----------------------------------------------------------
  * 実装機能：
- *  - F-01〜F-04（フェーズ1から継続）
- *  - F-05 タイトル編集 / F-06 説明文 / F-07 期限設定（S-02モーダル、新規追加もモーダルで入力）
- *  - F-08 データ保存（localStorage）
- *  - F-09 ドラッグ&ドロップ（カードの列間移動 + リストの並び替え）
- *  - F-10 リスト追加・削除（追加時に位置を選択可能）
- *  - F-11 完了タスクのアーカイブ
+ *  - F-01〜F-11（フェーズ1〜2から継続）
+ *  - F-13 ログイン状態チェック（auth.js requireAuth）
+ *  - F-14 ログアウトボタン
  *
- * 入力チェックの追加：
- *  - 期限は過去日付不可（要件定義書 5.7.1 を更新）
- *  - 期限の不正な入力（無効な日付）はエラーで保存不可
+ * データ分離：
+ *  - localStorage キーをユーザーごとに分離（taskboard-data-${email}）
+ *  - 未ログイン時は login.html にリダイレクト
  * ========================================================== */
 
 // ----------------------------------------------------------
 // 定数
 // ----------------------------------------------------------
-const STORAGE_KEY = 'taskboard-prototype-step2';
 const TITLE_MAX_LENGTH = 100;
 const DESC_MAX_LENGTH = 2000;
 const LIST_NAME_MAX_LENGTH = 30;
@@ -39,15 +35,19 @@ let editingListIdForNewCard = null; // 新規作成時の対象リスト
 let dragInfo = null; // { type: 'card'|'list', id: ... }
 
 function loadState() {
+  const key = getBoardStorageKey();
+  if (!key) return { lists: structuredClone(DEFAULT_LISTS) };
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw);
   } catch (_) { /* fallthrough */ }
   return { lists: structuredClone(DEFAULT_LISTS) };
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const key = getBoardStorageKey();
+  if (!key) return;
+  localStorage.setItem(key, JSON.stringify(state));
 }
 
 function generateId(prefix) {
@@ -55,29 +55,49 @@ function generateId(prefix) {
 }
 
 // ----------------------------------------------------------
-// 日付ユーティリティ
+// 日付ユーティリティ（フォーマット：YYYY/MM/DD）
 // ----------------------------------------------------------
 function todayStr() {
   const d = new Date();
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
+  return `${yyyy}/${mm}/${dd}`;
 }
 
 function isValidDateStr(s) {
   if (!s) return true; // 空はOK（任意項目）
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
-  const d = new Date(s);
+  if (!/^\d{4}\/\d{2}\/\d{2}$/.test(s)) return false;
+  const [y, m, day] = s.split('/').map(Number);
+  // ECMAScript の Date は YYYY/MM/DD をローカル時刻として解釈してくれる
+  const d = new Date(y, m - 1, day);
   if (Number.isNaN(d.getTime())) return false;
-  // 入力された日付の各要素が解釈結果と一致するか（例:2026-02-30 のような不正値を弾く）
-  const [y, m, day] = s.split('-').map(Number);
+  // 入力された値が解釈結果と一致するか（例:2026/02/30 のような不正値を弾く）
   return d.getFullYear() === y && d.getMonth() + 1 === m && d.getDate() === day;
 }
 
 function isPastDate(s) {
   if (!s) return false;
   return s < todayStr();
+}
+
+// 数字8桁を YYYY/MM/DD に整形。8桁未満なら部分整形（YYYY/MM や YYYY/）。
+// 数字以外はすべて除去する。
+function formatDateInput(raw) {
+  const digits = (raw || '').replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 6) return digits.slice(0, 4) + '/' + digits.slice(4);
+  return digits.slice(0, 4) + '/' + digits.slice(4, 6) + '/' + digits.slice(6);
+}
+
+// 期限入力欄に自動整形ハンドラを取り付ける
+function attachDueDateAutoFormat(input) {
+  input.addEventListener('input', () => {
+    const formatted = formatDateInput(input.value);
+    if (input.value !== formatted) {
+      input.value = formatted;
+    }
+  });
 }
 
 // ----------------------------------------------------------
@@ -188,6 +208,20 @@ function renderCard(card, listId) {
   }
 
   el.appendChild(content);
+
+  // カード上の削除ボタン（モーダルを開かずに直接削除）
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
+  const delBtn = document.createElement('button');
+  delBtn.className = 'card-btn delete';
+  delBtn.textContent = '×';
+  delBtn.title = '削除';
+  delBtn.addEventListener('click', e => {
+    e.stopPropagation(); // カードクリック（モーダル）を抑止
+    deleteCard(card.id);
+  });
+  actions.appendChild(delBtn);
+  el.appendChild(actions);
 
   el.addEventListener('click', () => openCardModal(card.id));
 
@@ -496,6 +530,20 @@ function saveCardModal() {
   closeCardModal();
 }
 
+// カード一覧上から直接削除する（モーダルを開かない）
+function deleteCard(cardId) {
+  if (!confirm('このカードを削除してもよろしいですか？')) return; // I-003
+  for (const list of state.lists) {
+    const card = list.cards.find(c => c.id === cardId);
+    if (card) {
+      card.archived = true;
+      saveState();
+      render();
+      return;
+    }
+  }
+}
+
 function deleteCardFromModal() {
   if (!editingCardId) return;
   if (!confirm('このカードを削除してもよろしいですか？')) return;
@@ -515,9 +563,30 @@ function deleteCardFromModal() {
 // 初期化
 // ----------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
+  // 認証チェック（未ログインなら login.html にリダイレクト）
+  if (!requireAuth()) return;
+
+  // ヘッダーにユーザー名表示
+  const headerUser = document.getElementById('header-user-name');
+  if (headerUser) headerUser.textContent = getCurrentUserEmail();
+
+  // ログアウトボタン
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      logout();
+      window.location.href = 'login.html';
+    });
+  }
+
+  // 認証後にユーザー専用データを読み込んで再描画
+  state = loadState();
   render();
 
   document.getElementById('add-list-btn').addEventListener('click', openListModal);
+
+  // 期限入力欄の自動整形（数字8桁→YYYY/MM/DD）
+  attachDueDateAutoFormat(document.getElementById('modal-due-input'));
 
   // カードモーダル
   document.getElementById('modal-close').addEventListener('click', closeCardModal);
