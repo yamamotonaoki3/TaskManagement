@@ -1,14 +1,12 @@
 /* ==========================================================
- * TaskBoard プロトタイプ Step 3（フェーズ3：認証付き）
+ * TaskBoard プロトタイプ Step 4（フェーズ4：便利機能）
  * ----------------------------------------------------------
  * 実装機能：
- *  - F-01〜F-11（フェーズ1〜2から継続）
- *  - F-13 ログイン状態チェック（auth.js requireAuth）
- *  - F-14 ログアウトボタン
- *
- * データ分離：
- *  - localStorage キーをユーザーごとに分離（taskboard-data-${email}）
- *  - 未ログイン時は login.html にリダイレクト
+ *  - F-01〜F-14（フェーズ1〜3から継続）
+ *  - F-15 優先度設定（高／中／低／なし）
+ *  - F-16 並び替え（リスト個別・期限／優先度／タイトル／手動）
+ *  - F-17 期限警告色（7日前から徐々に赤、1日前で真っ赤、完了列は適用なし）
+ *  - F-18 履歴検索：completed-tasks.html へ遷移するボタン
  * ========================================================== */
 
 // ----------------------------------------------------------
@@ -19,12 +17,29 @@ const DESC_MAX_LENGTH = 2000;
 const LIST_NAME_MAX_LENGTH = 30;
 
 const DEFAULT_LISTS = [
-  { id: 'list-todo',  name: 'やること', position: 1, cards: [] },
-  { id: 'list-doing', name: '進行中',   position: 2, cards: [] },
-  { id: 'list-done',  name: '完了',     position: 3, cards: [] },
+  { id: 'list-todo',  name: 'やること', position: 1, sortMode: 'manual', cards: [] },
+  { id: 'list-doing', name: '進行中',   position: 2, sortMode: 'manual', cards: [] },
+  { id: 'list-done',  name: '完了',     position: 3, sortMode: 'manual', cards: [] },
 ];
 
 const DONE_LIST_ID = 'list-done';
+
+// 優先度オプション
+const PRIORITY_OPTIONS = [
+  { value: '',       label: '（なし）', cssClass: '' },
+  { value: 'high',   label: '高',       cssClass: 'priority-high' },
+  { value: 'medium', label: '中',       cssClass: 'priority-medium' },
+  { value: 'low',    label: '低',       cssClass: 'priority-low' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'manual',   label: '手動' },
+  { value: 'dueDate',  label: '期限' },
+  { value: 'priority', label: '優先度' },
+  { value: 'title',    label: 'タイトル' },
+];
+
+const PRIORITY_RANK = { high: 0, medium: 1, low: 2, '': 3 };
 
 // ----------------------------------------------------------
 // 状態
@@ -39,7 +54,21 @@ function loadState() {
   if (!key) return { lists: structuredClone(DEFAULT_LISTS) };
   try {
     const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // 既存データのマイグレーション（欠損値にデフォルト値）
+      if (Array.isArray(parsed.lists)) {
+        for (const list of parsed.lists) {
+          if (typeof list.sortMode !== 'string') list.sortMode = 'manual';
+          if (Array.isArray(list.cards)) {
+            for (const card of list.cards) {
+              if (typeof card.priority !== 'string') card.priority = '';
+            }
+          }
+        }
+      }
+      return parsed;
+    }
   } catch (_) { /* fallthrough */ }
   return { lists: structuredClone(DEFAULT_LISTS) };
 }
@@ -90,13 +119,70 @@ function formatDateInput(raw) {
   return digits.slice(0, 4) + '/' + digits.slice(4, 6) + '/' + digits.slice(6);
 }
 
+// 期限警告色の計算（F-17）
+// 完了列・期限なしは null（通常背景）
+// 7日以上前 → 通常、1日前で真っ赤、間は線形補間
+function getDueWarningColor(card, listId) {
+  if (listId === DONE_LIST_ID) return null;
+  if (!card.dueDate) return null;
+  if (!isValidDateStr(card.dueDate)) return null;
+  const today = new Date(todayStr().replaceAll('/', '-'));
+  const due   = new Date(card.dueDate.replaceAll('/', '-'));
+  const daysLeft = Math.round((due - today) / 86400000);
+  if (daysLeft >= 7) return null;
+  const intensity = Math.min(1, Math.max(0, (7 - daysLeft) / 6));
+  // white(255,255,255) → 真っ赤(255,150,150)
+  const v = Math.round(255 - 105 * intensity);
+  return `rgb(255, ${v}, ${v})`;
+}
+
+// ソート済みかつアーカイブ済みを除いたカード配列を返す（F-16）
+function getSortedCards(list) {
+  const cards = list.cards.filter(c => !c.archived);
+  const mode = list.sortMode || 'manual';
+  if (mode === 'manual') return cards;
+
+  const sorted = cards.slice();
+  if (mode === 'dueDate') {
+    sorted.sort((a, b) => {
+      const aHas = !!a.dueDate, bHas = !!b.dueDate;
+      if (aHas && !bHas) return -1;
+      if (!aHas && bHas) return 1;
+      if (!aHas && !bHas) return 0;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+  } else if (mode === 'priority') {
+    sorted.sort((a, b) => {
+      const ra = PRIORITY_RANK[a.priority || ''];
+      const rb = PRIORITY_RANK[b.priority || ''];
+      return ra - rb;
+    });
+  } else if (mode === 'title') {
+    sorted.sort((a, b) => a.title.localeCompare(b.title, 'ja'));
+  }
+  return sorted;
+}
+
 // 期限入力欄に自動整形ハンドラを取り付ける
+// カーソル位置の前にある「数字の個数」を維持して、整形後に同じ数字位置にカーソルを置く
 function attachDueDateAutoFormat(input) {
   input.addEventListener('input', () => {
-    const formatted = formatDateInput(input.value);
-    if (input.value !== formatted) {
-      input.value = formatted;
+    const oldValue = input.value;
+    const oldCursor = input.selectionStart ?? oldValue.length;
+    // カーソルより前にある数字の個数
+    const digitsBefore = oldValue.slice(0, oldCursor).replace(/\D/g, '').length;
+
+    const formatted = formatDateInput(oldValue);
+    if (oldValue === formatted) return;
+
+    input.value = formatted;
+    // 整形後の文字列で「数字 digitsBefore 個分」の位置にカーソルを置く
+    let pos = 0, count = 0;
+    for (; pos < formatted.length; pos++) {
+      if (count >= digitsBefore) break;
+      if (/\d/.test(formatted[pos])) count++;
     }
+    input.setSelectionRange(pos, pos);
   });
 }
 
@@ -118,7 +204,7 @@ function render() {
     body.className = 'list-body';
     body.dataset.listId = list.id;
 
-    const visibleCards = list.cards.filter(c => !c.archived);
+    const visibleCards = getSortedCards(list);
     if (visibleCards.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'list-empty';
@@ -148,6 +234,27 @@ function renderListHeader(list, column) {
   title.className = 'list-header-title';
   title.textContent = list.name;
   header.appendChild(title);
+
+  // 並び替えセレクト（F-16）
+  const sortSelect = document.createElement('select');
+  sortSelect.className = 'list-sort-select';
+  sortSelect.title = '並び替え';
+  SORT_OPTIONS.forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt.value;
+    o.textContent = opt.label;
+    sortSelect.appendChild(o);
+  });
+  sortSelect.value = list.sortMode || 'manual';
+  // ヘッダーのドラッグと干渉しないようにする
+  sortSelect.addEventListener('mousedown', e => e.stopPropagation());
+  sortSelect.addEventListener('click', e => e.stopPropagation());
+  sortSelect.addEventListener('change', e => {
+    list.sortMode = e.target.value;
+    saveState();
+    render();
+  });
+  header.appendChild(sortSelect);
 
   // 初期3リストは削除不可（業務サイクル維持のため）
   const isInitial = ['list-todo', 'list-doing', 'list-done'].includes(list.id);
@@ -197,6 +304,17 @@ function renderCard(card, listId) {
   title.textContent = card.title;
   content.appendChild(title);
 
+  // 優先度バッジ（F-15）
+  if (card.priority) {
+    const priorityOpt = PRIORITY_OPTIONS.find(o => o.value === card.priority);
+    if (priorityOpt) {
+      const badge = document.createElement('span');
+      badge.className = 'priority-badge ' + priorityOpt.cssClass;
+      badge.textContent = priorityOpt.label;
+      title.prepend(badge);
+    }
+  }
+
   if (card.dueDate) {
     const meta = document.createElement('div');
     meta.className = 'card-meta';
@@ -208,6 +326,10 @@ function renderCard(card, listId) {
   }
 
   el.appendChild(content);
+
+  // 期限警告色（F-17）
+  const warningColor = getDueWarningColor(card, listId);
+  if (warningColor) el.style.backgroundColor = warningColor;
 
   // カード上の削除ボタン（モーダルを開かずに直接削除）
   const actions = document.createElement('div');
@@ -251,7 +373,38 @@ function renderAddCardButton(listId) {
 // ----------------------------------------------------------
 // ドロップターゲット（カード移動 + リスト並び替えの両対応）
 // ----------------------------------------------------------
+// 指定された list-body の中で、clientY が「何番目の可視カードの直前」に該当するかを返す
+// すべてのカードより下なら cards.length（末尾追加）を返す
+function computeCardDropIndex(listBody, clientY) {
+  const cardEls = [...listBody.querySelectorAll('.card')];
+  for (let i = 0; i < cardEls.length; i++) {
+    const rect = cardEls[i].getBoundingClientRect();
+    if (clientY < rect.top + rect.height / 2) return i;
+  }
+  return cardEls.length;
+}
+
+// カードドラッグ中のドロップ位置インジケーター（細い水平線）の表示制御
+function clearCardDropIndicators() {
+  document.querySelectorAll('.card-drop-indicator').forEach(el => el.remove());
+}
+
+function showCardDropIndicator(listBody, dropIndex) {
+  clearCardDropIndicators();
+  const indicator = document.createElement('div');
+  indicator.className = 'card-drop-indicator';
+  const cardEls = [...listBody.querySelectorAll('.card')];
+  if (dropIndex >= cardEls.length) {
+    listBody.appendChild(indicator);
+  } else {
+    listBody.insertBefore(indicator, cardEls[dropIndex]);
+  }
+}
+
 function setupColumnDropTarget(column, listId) {
+  // listBody はイベント時に取得（render() 中ではまだ append 前のため）
+  const getListBody = () => column.querySelector('.list-body');
+
   column.addEventListener('dragover', e => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -260,10 +413,15 @@ function setupColumnDropTarget(column, listId) {
 
     if (dragInfo.type === 'card') {
       column.classList.add('drag-over');
+      // 手動並び替えのときだけ挿入位置インジケーターを出す
+      const targetList = state.lists.find(l => l.id === listId);
+      const body = getListBody();
+      if (body && targetList && (targetList.sortMode || 'manual') === 'manual') {
+        const idx = computeCardDropIndex(body, e.clientY);
+        showCardDropIndicator(body, idx);
+      }
     } else if (dragInfo.type === 'list') {
-      // 自分自身の上はマーカー出さない
       if (dragInfo.id === listId) return;
-      // 横位置で前後を判定
       const rect = column.getBoundingClientRect();
       const before = e.clientX < rect.left + rect.width / 2;
       column.classList.toggle('list-drop-before', before);
@@ -273,16 +431,20 @@ function setupColumnDropTarget(column, listId) {
   column.addEventListener('dragleave', e => {
     if (!column.contains(e.relatedTarget)) {
       column.classList.remove('drag-over', 'list-drop-before', 'list-drop-after');
+      clearCardDropIndicators();
     }
   });
   column.addEventListener('drop', e => {
     e.preventDefault();
     column.classList.remove('drag-over', 'list-drop-before', 'list-drop-after');
+    clearCardDropIndicators();
 
     if (!dragInfo) return;
 
     if (dragInfo.type === 'card') {
-      moveCardTo(dragInfo.id, listId);
+      const body = getListBody();
+      const dropIndex = body ? computeCardDropIndex(body, e.clientY) : null;
+      moveCardTo(dragInfo.id, listId, dropIndex);
     } else if (dragInfo.type === 'list' && dragInfo.id !== listId) {
       const rect = column.getBoundingClientRect();
       const before = e.clientX < rect.left + rect.width / 2;
@@ -294,7 +456,7 @@ function setupColumnDropTarget(column, listId) {
 // ----------------------------------------------------------
 // カード操作
 // ----------------------------------------------------------
-function moveCardTo(cardId, targetListId) {
+function moveCardTo(cardId, targetListId, visibleDropIndex) {
   let movingCard = null;
   let sourceList = null;
 
@@ -321,7 +483,20 @@ function moveCardTo(cardId, targetListId) {
     movingCard.completedAt = null;
   }
 
-  targetList.cards.push(movingCard);
+  // 手動並び替えの場合のみ任意位置への挿入を許可。ソート中は末尾追加（並びはソートで決まる）
+  const isManualSort = (targetList.sortMode || 'manual') === 'manual';
+  if (isManualSort && Number.isInteger(visibleDropIndex)) {
+    const visibleCards = targetList.cards.filter(c => !c.archived);
+    if (visibleDropIndex >= visibleCards.length) {
+      targetList.cards.push(movingCard);
+    } else {
+      const refCard = visibleCards[visibleDropIndex];
+      const refIdx = targetList.cards.indexOf(refCard);
+      targetList.cards.splice(refIdx, 0, movingCard);
+    }
+  } else {
+    targetList.cards.push(movingCard);
+  }
   saveState();
   render();
 }
@@ -429,6 +604,7 @@ function openCardModalForNew(listId) {
   document.getElementById('modal-title-input').value = '';
   document.getElementById('modal-desc-input').value = '';
   document.getElementById('modal-due-input').value = '';
+  document.getElementById('modal-priority-input').value = '';
   document.getElementById('modal-delete').style.display = 'none'; // 新規時は削除不要
   clearModalErrors();
 
@@ -451,6 +627,7 @@ function openCardModal(cardId) {
   document.getElementById('modal-title-input').value = target.title;
   document.getElementById('modal-desc-input').value  = target.description || '';
   document.getElementById('modal-due-input').value   = target.dueDate || '';
+  document.getElementById('modal-priority-input').value = target.priority || '';
   document.getElementById('modal-delete').style.display = '';
   clearModalErrors();
 
@@ -474,6 +651,7 @@ function saveCardModal() {
   const title = document.getElementById('modal-title-input').value.trim();
   const description = document.getElementById('modal-desc-input').value;
   const dueDate = document.getElementById('modal-due-input').value;
+  const priority = document.getElementById('modal-priority-input').value;
 
   clearModalErrors();
   let hasError = false;
@@ -509,6 +687,7 @@ function saveCardModal() {
       title,
       description,
       dueDate,
+      priority,
       archived: false,
       completedAt: null,
       createdAt: new Date().toISOString(),
@@ -521,6 +700,7 @@ function saveCardModal() {
         card.title = title;
         card.description = description;
         card.dueDate = dueDate;
+        card.priority = priority;
         break;
       }
     }
@@ -584,6 +764,11 @@ document.addEventListener('DOMContentLoaded', () => {
   render();
 
   document.getElementById('add-list-btn').addEventListener('click', openListModal);
+
+  // 完了タスク一覧へ遷移（F-18）
+  document.getElementById('completed-list-btn').addEventListener('click', () => {
+    window.location.href = 'completed-tasks.html';
+  });
 
   // 期限入力欄の自動整形（数字8桁→YYYY/MM/DD）
   attachDueDateAutoFormat(document.getElementById('modal-due-input'));

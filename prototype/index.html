@@ -23,7 +23,7 @@
 
   <footer class="board-footer">
     <button class="btn btn-secondary" id="add-list-btn">+ リスト追加</button>
-    <button class="btn btn-secondary" disabled title="フェーズ4で実装予定">完了タスク一覧へ</button>
+    <button class="btn btn-secondary" id="completed-list-btn">完了タスク一覧へ</button>
   </footer>
 
   <!-- カード詳細モーダル（S-02）：新規追加・編集の両方に使用 -->
@@ -44,10 +44,15 @@
           <textarea id="modal-desc-input" class="field-input" rows="3" maxlength="2010"></textarea>
           <span class="field-error" id="modal-desc-error"></span>
         </label>
-        <div class="field field-readonly">
+        <label class="field">
           <span class="field-label">優先度</span>
-          <span class="field-value-disabled">（フェーズ4で実装予定）</span>
-        </div>
+          <select id="modal-priority-input" class="field-input">
+            <option value="">（設定なし）</option>
+            <option value="high">高</option>
+            <option value="medium">中</option>
+            <option value="low">低</option>
+          </select>
+        </label>
         <label class="field">
           <span class="field-label">期限（YYYY/MM/DD・過去日付は不可・8桁で自動整形）</span>
           <input type="text" id="modal-due-input" class="field-input"

@@ -82,9 +82,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px;
+  padding: 8px 12px;
   font-weight: bold;
-  font-size: 15px;
+  font-size: 14px;
   color: #1a4f8a;
   border-bottom: 1px solid #cbd5e0;
   cursor: grab;
@@ -126,23 +126,24 @@ body {
 }
 
 .list-body {
-  padding: 10px;
+  padding: 8px;
   overflow-y: auto;
   flex: 1;
   min-height: 80px;
 }
 
-/* カード */
+/* カード（10件表示できるよう少しコンパクトに） */
 .card {
   background: #fff;
-  border-radius: 6px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  border-radius: 5px;
+  padding: 6px 10px;
+  margin-bottom: 5px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  font-size: 14px;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
   cursor: pointer;
 }
 
@@ -152,6 +153,15 @@ body {
 
 .card.dragging {
   opacity: 0.4;
+}
+
+/* カードドロップ位置のインジケーター */
+.card-drop-indicator {
+  height: 3px;
+  background: #1f6feb;
+  border-radius: 2px;
+  margin: 2px 0;
+  pointer-events: none;
 }
 
 .card-content {
@@ -167,9 +177,9 @@ body {
 .card-meta {
   display: flex;
   gap: 8px;
-  font-size: 12px;
+  font-size: 11px;
   color: #64748b;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .card-due {
@@ -538,6 +548,169 @@ body {
 /* ヘッダーのユーザー名表示（index.html） */
 .user-name {
   font-weight: 500;
+}
+
+/* ==========================================================
+ * フェーズ4機能用スタイル
+ * ========================================================== */
+
+/* 優先度バッジ（F-15） */
+.priority-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: bold;
+  margin-right: 6px;
+  color: #fff;
+  vertical-align: middle;
+}
+
+.priority-badge.priority-high {
+  background: #c53030;
+}
+
+.priority-badge.priority-medium {
+  background: #d69e2e;
+}
+
+.priority-badge.priority-low {
+  background: #3182ce;
+}
+
+/* 並び替えセレクト（F-16） */
+.list-sort-select {
+  background: #fff;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #2c5282;
+  margin: 0 6px;
+  cursor: pointer;
+}
+
+.list-sort-select:hover {
+  background: #f0f4f8;
+}
+
+/* ==========================================================
+ * 完了タスク一覧画面（S-05）
+ * ========================================================== */
+.history-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.history-search {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  background: #fff;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e0;
+}
+
+.history-search input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.history-search-error {
+  color: #c53030;
+  font-size: 12px;
+  margin-bottom: 8px;
+  min-height: 1em;
+}
+
+.history-results {
+  flex: 1;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #cbd5e0;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  cursor: pointer;
+}
+
+.history-row:hover {
+  background: #f0f4f8;
+}
+
+.history-row:last-child {
+  border-bottom: none;
+}
+
+.history-row .row-field {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-row .row-label {
+  font-size: 12px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.history-row .row-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-row .row-title {
+  flex: 0 0 30%;
+}
+
+.history-row .row-title .row-value {
+  font-weight: 500;
+}
+
+.history-row .row-description {
+  flex: 1;
+}
+
+.history-row .row-description .row-value {
+  font-size: 13px;
+  color: #475569;
+}
+
+.history-row .row-completed {
+  flex-shrink: 0;
+}
+
+.history-row .row-completed .row-value {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.history-empty {
+  padding: 32px 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
 }
 
 .modal-footer {
