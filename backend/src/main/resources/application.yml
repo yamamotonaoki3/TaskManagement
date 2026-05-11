@@ -4,3 +4,17 @@ server:
 spring:
   application:
     name: api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/taskboard
+    username: taskboard
+    password: taskboard
+  jpa:
+    hibernate:
+      ddl-auto: validate          # スキーマは Flyway が管理、Hibernate は検証のみ
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
