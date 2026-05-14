@@ -22,4 +22,9 @@ public class TaskController {
     public TaskResponse getById(@PathVariable Long id) {
         return taskService.findById(id);
     }
+
+    @GetMapping("/search")
+    public List<TaskResponse> search(@RequestParam(required = false) String q) {
+        return taskService.search(q);
+    }
 }
