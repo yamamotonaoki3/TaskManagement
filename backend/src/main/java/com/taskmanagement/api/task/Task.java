@@ -1,4 +1,4 @@
-package com.taskmanagement.api.card;
+package com.taskmanagement.api.task;
 
 import com.taskmanagement.api.list.TaskList;
 import jakarta.persistence.*;
@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "card")
-public class Card {
+@Table(name = "task")
+public class Task {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +37,7 @@ public class Card {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    protected Card() {}
+    protected Task() {}
 
     public Long getId() { return id; }
     public TaskList getTaskList() { return taskList; }
