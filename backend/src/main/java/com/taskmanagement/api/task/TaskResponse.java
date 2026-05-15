@@ -11,6 +11,8 @@ public record TaskResponse(
         String description,
         LocalDate dueDate,
         String priority,
+        String status,
+        LocalDateTime completedAt,
         boolean archived,
         int position,
         LocalDateTime createdAt
@@ -24,6 +26,8 @@ public record TaskResponse(
                 task.getDescription(),
                 task.getDueDate(),
                 task.getPriority(),
+                task.getStatus(),
+                task.getCompletedAt(),
                 task.isArchived(),
                 task.getPosition(),
                 task.getCreatedAt()
