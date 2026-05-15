@@ -11,6 +11,9 @@ public class TaskList {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @Column(nullable = false)
     private String name;
 
@@ -23,6 +26,7 @@ public class TaskList {
     protected TaskList() {}
 
     public Long getId() { return id; }
+    public Long getUserId() { return userId; }
     public String getName() { return name; }
     public int getPosition() { return position; }
     public LocalDateTime getCreatedAt() { return createdAt; }

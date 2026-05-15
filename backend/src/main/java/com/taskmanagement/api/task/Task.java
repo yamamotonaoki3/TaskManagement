@@ -28,6 +28,11 @@ public class Task {
     @Column(length = 10)
     private String priority;
 
+    @Column(nullable = false, length = 20)
+    private String status;
+
+    private LocalDateTime completedAt;
+
     @Column(nullable = false)
     private boolean archived;
 
@@ -45,6 +50,8 @@ public class Task {
     public String getDescription() { return description; }
     public LocalDate getDueDate() { return dueDate; }
     public String getPriority() { return priority; }
+    public String getStatus() { return status; }
+    public LocalDateTime getCompletedAt() { return completedAt; }
     public boolean isArchived() { return archived; }
     public int getPosition() { return position; }
     public LocalDateTime getCreatedAt() { return createdAt; }
