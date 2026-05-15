@@ -35,6 +35,7 @@ backend/
 - Spring Web / Spring Data JPA（Hibernate）
 - PostgreSQL 17（Docker）
 - Flyway（DB マイグレーション）
+- **API スタイル**: REST API（JSON over HTTP）
 
 ## セットアップと起動
 

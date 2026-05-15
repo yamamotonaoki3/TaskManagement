@@ -36,7 +36,7 @@ flowchart LR
     end
     subgraph Server[Webアプリケーションサーバ]
         FE[静的ファイル配信<br/>（ビルド済み React アプリ）]
-        BE[バックエンドAPI<br/>Java 25 + Spring Boot 4.0.3]
+        BE[REST API（JSON over HTTP）<br/>Java 25 + Spring Boot 4.0.3]
         FE --- BE
     end
     subgraph DB[データベース]
