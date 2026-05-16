@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../../types/task';
 import { TaskCard } from '../TaskCard/TaskCard';
 import { TaskCreateModal } from '../TaskCreateModal/TaskCreateModal';
@@ -10,15 +11,16 @@ interface KanbanColumnProps {
   listName: string;
   tasks: TaskResponse[];
   isSearching: boolean;
+  isOver: boolean;
   showAddButton: boolean;
   onCreate: (data: TaskCreateRequest) => Promise<void>;
   onStatusChange: (id: number, data: TaskStatusUpdateRequest) => Promise<void>;
   onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
 }
 
-export function KanbanColumn({ listId, listName, tasks, isSearching, showAddButton, onCreate, onStatusChange, onUpdate }: KanbanColumnProps) {
+export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onStatusChange, onUpdate }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { setNodeRef, isOver } = useDroppable({ id: listId });
+  const { setNodeRef } = useDroppable({ id: listId });
 
   return (
     <div className={styles.column}>
@@ -29,20 +31,22 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, showAddButt
         )}
       </div>
       <div ref={setNodeRef} className={`${styles.cards} ${isOver ? styles.over : ''}`}>
-        {tasks.length === 0 ? (
-          <p className={styles.empty}>
-            {isSearching ? '一致するタスクはありません' : 'カードはありません'}
-          </p>
-        ) : (
-          tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onStatusChange={onStatusChange}
-              onUpdate={onUpdate}
-            />
-          ))
-        )}
+        <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+          {tasks.length === 0 ? (
+            <p className={styles.empty}>
+              {isSearching ? '一致するタスクはありません' : 'カードはありません'}
+            </p>
+          ) : (
+            tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onStatusChange={onStatusChange}
+                onUpdate={onUpdate}
+              />
+            ))
+          )}
+        </SortableContext>
       </div>
       {isModalOpen && (
         <TaskCreateModal
