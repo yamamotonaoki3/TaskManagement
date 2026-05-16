@@ -14,3 +14,11 @@ export interface TaskResponse {
 }
 
 export type KanbanColumns = Record<string, TaskResponse[]>;
+
+export interface TaskCreateRequest {
+  listId: number;
+  title: string;
+  description?: string;
+  dueDate?: string;
+  priority?: 'high' | 'medium' | 'low';
+}

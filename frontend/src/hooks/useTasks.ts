@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { fetchAllTasks, searchTasks } from '../api/taskApi';
-import type { KanbanColumns, TaskResponse } from '../types/task';
+import { useState, useEffect, useCallback } from 'react';
+import { fetchAllTasks, searchTasks, createTask } from '../api/taskApi';
+import type { KanbanColumns, TaskCreateRequest, TaskResponse } from '../types/task';
 
 function groupByListName(tasks: TaskResponse[]): { columns: KanbanColumns; columnOrder: string[] } {
   const map = new Map<string, TaskResponse[]>();
@@ -23,22 +23,29 @@ export function useTasks() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(true);
-      const apiCall = query.trim() === '' ? fetchAllTasks() : searchTasks(query.trim());
-      apiCall
-        .then((tasks) => {
-          const { columns, columnOrder } = groupByListName(tasks);
-          setColumns(columns);
-          setColumnOrder(columnOrder);
-          setError(null);
-        })
-        .catch(() => setError('データの取得に失敗しました。バックエンドが起動しているか確認してください。'))
-        .finally(() => setLoading(false));
-    }, 300);
-    return () => clearTimeout(timer);
+  const refresh = useCallback(() => {
+    setLoading(true);
+    const apiCall = query.trim() === '' ? fetchAllTasks() : searchTasks(query.trim());
+    return apiCall
+      .then((tasks) => {
+        const { columns, columnOrder } = groupByListName(tasks);
+        setColumns(columns);
+        setColumnOrder(columnOrder);
+        setError(null);
+      })
+      .catch(() => setError('データの取得に失敗しました。バックエンドが起動しているか確認してください。'))
+      .finally(() => setLoading(false));
   }, [query]);
 
-  return { columns, columnOrder, loading, error, query, setQuery };
+  useEffect(() => {
+    const timer = setTimeout(() => { refresh(); }, 300);
+    return () => clearTimeout(timer);
+  }, [refresh]);
+
+  const create = async (data: TaskCreateRequest) => {
+    await createTask(data);
+    await refresh();
+  };
+
+  return { columns, columnOrder, loading, error, query, setQuery, create };
 }
