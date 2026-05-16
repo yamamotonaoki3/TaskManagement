@@ -55,6 +55,59 @@ public class TaskService {
         return TaskResponse.from(taskRepository.save(task));
     }
 
+    @Transactional
+    public TaskResponse updateStatus(Long id, TaskStatusRequest req) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id));
+
+        // カラム移動
+        if (req.listId() != null && !req.listId().equals(task.getTaskList().getId())) {
+            TaskList newList = taskListRepository.findById(req.listId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "List not found: " + req.listId()));
+            task.setTaskList(newList);
+        }
+
+        // status 更新
+        task.setStatus(req.status());
+        if ("done".equals(req.status())) {
+            task.setCompletedAt(LocalDateTime.now());
+        } else {
+            task.setCompletedAt(null);
+        }
+
+        // position 更新（指定がある場合）
+        if (req.position() != null) {
+            reorderPosition(task, req.position());
+        }
+
+        return TaskResponse.from(taskRepository.save(task));
+    }
+
+    private void reorderPosition(Task movedTask, int newPosition) {
+        Long listId = movedTask.getTaskList().getId();
+        List<Task> siblings = taskRepository.findByTaskListIdAndArchivedFalseOrderByPositionAsc(listId);
+        siblings.remove(movedTask);
+        int clampedPos = Math.max(0, Math.min(newPosition, siblings.size()));
+        siblings.add(clampedPos, movedTask);
+        for (int i = 0; i < siblings.size(); i++) {
+            siblings.get(i).setPosition(i);
+        }
+        taskRepository.saveAll(siblings);
+    }
+
+    @Transactional
+    public TaskResponse updateTask(Long id, TaskUpdateRequest req) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id));
+
+        if (req.title() != null) task.setTitle(req.title());
+        if (req.description() != null) task.setDescription(req.description());
+        if (req.dueDate() != null) task.setDueDate(req.dueDate());
+        if (req.priority() != null) task.setPriority(req.priority());
+
+        return TaskResponse.from(taskRepository.save(task));
+    }
+
     public List<TaskResponse> search(String query) {
         if (query == null || query.isBlank()) {
             return taskRepository.findAll()

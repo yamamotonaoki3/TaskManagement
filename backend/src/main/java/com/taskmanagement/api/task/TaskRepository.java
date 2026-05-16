@@ -19,4 +19,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT COALESCE(MAX(t.position), 0) FROM Task t WHERE t.taskList.id = :listId")
     int findMaxPositionByListId(@Param("listId") Long listId);
+
+    List<Task> findByTaskListIdAndArchivedFalseOrderByPositionAsc(Long listId);
 }

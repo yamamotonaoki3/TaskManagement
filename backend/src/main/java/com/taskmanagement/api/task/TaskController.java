@@ -35,4 +35,14 @@ public class TaskController {
     public TaskResponse create(@RequestBody @Valid TaskRequest req) {
         return taskService.create(req);
     }
+
+    @PatchMapping("/{id}/status")
+    public TaskResponse updateStatus(@PathVariable Long id, @RequestBody @Valid TaskStatusRequest req) {
+        return taskService.updateStatus(id, req);
+    }
+
+    @PatchMapping("/{id}")
+    public TaskResponse updateTask(@PathVariable Long id, @RequestBody @Valid TaskUpdateRequest req) {
+        return taskService.updateTask(id, req);
+    }
 }

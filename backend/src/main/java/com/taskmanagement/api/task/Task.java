@@ -62,6 +62,7 @@ public class Task {
     public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
     public void setPriority(String priority) { this.priority = priority; }
     public void setStatus(String status) { this.status = status; }
+    public void setCompletedAt(LocalDateTime completedAt) { this.completedAt = completedAt; }
     public void setArchived(boolean archived) { this.archived = archived; }
     public void setPosition(int position) { this.position = position; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
