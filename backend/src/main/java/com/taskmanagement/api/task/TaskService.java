@@ -2,6 +2,9 @@ package com.taskmanagement.api.task;
 
 import com.taskmanagement.api.list.TaskList;
 import com.taskmanagement.api.list.TaskListRepository;
+import com.taskmanagement.api.task.dto.TaskRequest;
+import com.taskmanagement.api.task.dto.TaskStatusRequest;
+import com.taskmanagement.api.task.dto.TaskUpdateRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

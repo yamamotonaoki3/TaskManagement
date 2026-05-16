@@ -1,5 +1,8 @@
 package com.taskmanagement.api.task;
 
+import com.taskmanagement.api.task.dto.TaskRequest;
+import com.taskmanagement.api.task.dto.TaskStatusRequest;
+import com.taskmanagement.api.task.dto.TaskUpdateRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
