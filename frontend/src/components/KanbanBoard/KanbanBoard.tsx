@@ -4,7 +4,7 @@ import { Header } from '../Header/Header';
 import styles from './KanbanBoard.module.css';
 
 export function KanbanBoard() {
-  const { columns, columnOrder, loading, error, query, setQuery } = useTasks();
+  const { columns, columnOrder, loading, error, query, setQuery, create } = useTasks();
 
   return (
     <div className={styles.wrapper}>
@@ -14,14 +14,21 @@ export function KanbanBoard() {
         {error && <p className={styles.error}>{error}</p>}
         {!loading && !error && (
           <div className={styles.columns}>
-            {columnOrder.map((listName) => (
-              <KanbanColumn
-                key={listName}
-                listName={listName}
-                tasks={columns[listName] ?? []}
-                isSearching={query.trim() !== ''}
-              />
-            ))}
+            {columnOrder.map((listName, index) => {
+              const tasks = columns[listName] ?? [];
+              const listId = tasks[0]?.listId ?? 0;
+              return (
+                <KanbanColumn
+                  key={listName}
+                  listId={listId}
+                  listName={listName}
+                  tasks={tasks}
+                  isSearching={query.trim() !== ''}
+                  showAddButton={index === 0}
+                  onCreate={create}
+                />
+              );
+            })}
           </div>
         )}
       </main>
