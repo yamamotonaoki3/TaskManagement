@@ -4,7 +4,7 @@ import { Header } from '../Header/Header';
 import styles from './KanbanBoard.module.css';
 
 export function KanbanBoard() {
-  const { columns, columnOrder, loading, error, query, setQuery, create } = useTasks();
+  const { columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask } = useTasks();
 
   return (
     <div className={styles.wrapper}>
@@ -26,6 +26,8 @@ export function KanbanBoard() {
                   isSearching={query.trim() !== ''}
                   showAddButton={index === 0}
                   onCreate={create}
+                  onStatusChange={patchStatus}
+                  onUpdate={patchTask}
                 />
               );
             })}

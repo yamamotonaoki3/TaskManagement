@@ -104,7 +104,7 @@ public class TaskService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id));
 
         if (req.title() != null) task.setTitle(req.title());
-        if (req.description() != null) task.setDescription(req.description());
+        task.setDescription(req.description()); // null で明示的にクリア可能
         if (req.dueDate() != null) task.setDueDate(req.dueDate());
         if (req.priority() != null) task.setPriority(req.priority());
 

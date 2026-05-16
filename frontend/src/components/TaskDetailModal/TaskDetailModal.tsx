@@ -1,0 +1,101 @@
+import { useState } from 'react';
+import type { TaskResponse, TaskUpdateRequest } from '../../types/task';
+import styles from './TaskDetailModal.module.css';
+
+interface TaskDetailModalProps {
+  task: TaskResponse;
+  onClose: () => void;
+  onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
+}
+
+export function TaskDetailModal({ task, onClose, onUpdate }: TaskDetailModalProps) {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description ?? '');
+  const [dueDate, setDueDate] = useState(task.dueDate ?? '');
+  const [priority, setPriority] = useState(task.priority ?? 'medium');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onUpdate(task.id, {
+        title: title.trim(),
+        description: description.trim() || null,
+        dueDate: dueDate || null,
+        priority: priority as 'high' | 'medium' | 'low',
+      });
+      onClose();
+    } catch {
+      setError('保存に失敗しました。もう一度お試しください。');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <h3 className={styles.heading}>タスクを編集</h3>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <label className={styles.label}>
+            タイトル <span className={styles.required}>*</span>
+            <input
+              className={styles.input}
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              autoFocus
+            />
+          </label>
+          <label className={styles.label}>
+            説明
+            <textarea
+              className={styles.textarea}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+            />
+          </label>
+          <label className={styles.label}>
+            期限
+            <input
+              className={styles.input}
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </label>
+          <label className={styles.label}>
+            優先度
+            <select
+              className={styles.select}
+              value={priority ?? 'medium'}
+              onChange={(e) => setPriority(e.target.value as 'high' | 'medium' | 'low')}
+            >
+              <option value="high">高</option>
+              <option value="medium">中</option>
+              <option value="low">低</option>
+            </select>
+          </label>
+          {error && <p className={styles.error}>{error}</p>}
+          <div className={styles.actions}>
+            <button type="button" className={styles.cancelButton} onClick={onClose}>
+              キャンセル
+            </button>
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={!title.trim() || submitting}
+            >
+              {submitting ? '保存中...' : '保存する'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

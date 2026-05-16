@@ -5,9 +5,11 @@ export interface TaskResponse {
   listId: number;
   listName: string;
   title: string;
-  description: string;
+  description: string | null;
   dueDate: string | null;
   priority: Priority;
+  status: 'todo' | 'in_progress' | 'done';
+  completedAt: string | null;
   archived: boolean;
   position: number;
   createdAt: string;
@@ -20,5 +22,18 @@ export interface TaskCreateRequest {
   title: string;
   description?: string;
   dueDate?: string;
+  priority?: 'high' | 'medium' | 'low';
+}
+
+export interface TaskStatusUpdateRequest {
+  status: 'todo' | 'in_progress' | 'done';
+  listId?: number;
+  position?: number;
+}
+
+export interface TaskUpdateRequest {
+  title?: string;
+  description?: string;
+  dueDate?: string | null;
   priority?: 'high' | 'medium' | 'low';
 }
