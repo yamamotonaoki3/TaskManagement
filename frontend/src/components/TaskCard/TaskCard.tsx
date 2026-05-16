@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import type { TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../../types/task';
 import { TaskDetailModal } from '../TaskDetailModal/TaskDetailModal';
 import styles from './TaskCard.module.css';
@@ -29,6 +31,11 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onStatusChange, onUpdate }: TaskCardProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: task.id,
+    attributes: { roleDescription: 'draggable task card' },
+  });
+  const style = { transform: CSS.Translate.toString(transform) };
 
   const handleStatusClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -37,7 +44,14 @@ export function TaskCard({ task, onStatusChange, onUpdate }: TaskCardProps) {
 
   return (
     <>
-      <div className={styles.card} onClick={() => setIsDetailOpen(true)}>
+      <div
+        ref={setNodeRef}
+        style={style}
+        {...listeners}
+        {...attributes}
+        className={`${styles.card} ${isDragging ? styles.dragging : ''}`}
+        onClick={() => !isDragging && setIsDetailOpen(true)}
+      >
         <div className={styles.cardTop}>
           {task.priority && (
             <span className={styles.badge} data-priority={task.priority}>
