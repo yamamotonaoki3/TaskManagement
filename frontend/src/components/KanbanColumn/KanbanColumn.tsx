@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { TaskCreateRequest, TaskResponse } from '../../types/task';
+import type { TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../../types/task';
 import { TaskCard } from '../TaskCard/TaskCard';
 import { TaskCreateModal } from '../TaskCreateModal/TaskCreateModal';
 import styles from './KanbanColumn.module.css';
@@ -11,9 +11,11 @@ interface KanbanColumnProps {
   isSearching: boolean;
   showAddButton: boolean;
   onCreate: (data: TaskCreateRequest) => Promise<void>;
+  onStatusChange: (id: number, data: TaskStatusUpdateRequest) => Promise<void>;
+  onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
 }
 
-export function KanbanColumn({ listId, listName, tasks, isSearching, showAddButton, onCreate }: KanbanColumnProps) {
+export function KanbanColumn({ listId, listName, tasks, isSearching, showAddButton, onCreate, onStatusChange, onUpdate }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -30,7 +32,14 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, showAddButt
             {isSearching ? '一致するタスクはありません' : 'カードはありません'}
           </p>
         ) : (
-          tasks.map((task) => <TaskCard key={task.id} task={task} />)
+          tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onStatusChange={onStatusChange}
+              onUpdate={onUpdate}
+            />
+          ))
         )}
       </div>
       {isModalOpen && (

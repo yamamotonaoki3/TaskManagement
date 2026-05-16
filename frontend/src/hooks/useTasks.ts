@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchAllTasks, searchTasks, createTask } from '../api/taskApi';
-import type { KanbanColumns, TaskCreateRequest, TaskResponse } from '../types/task';
+import { fetchAllTasks, searchTasks, createTask, updateTaskStatus, updateTask } from '../api/taskApi';
+import type { KanbanColumns, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
 
 function groupByListName(tasks: TaskResponse[]): { columns: KanbanColumns; columnOrder: string[] } {
   const map = new Map<string, TaskResponse[]>();
@@ -47,5 +47,15 @@ export function useTasks() {
     await refresh();
   };
 
-  return { columns, columnOrder, loading, error, query, setQuery, create };
+  const patchStatus = async (id: number, data: TaskStatusUpdateRequest) => {
+    await updateTaskStatus(id, data);
+    await refresh();
+  };
+
+  const patchTask = async (id: number, data: TaskUpdateRequest) => {
+    await updateTask(id, data);
+    await refresh();
+  };
+
+  return { columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask };
 }

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { TaskCreateRequest, TaskResponse } from '../types/task';
+import type { TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
@@ -14,3 +14,9 @@ export const searchTasks = (q: string): Promise<TaskResponse[]> =>
 
 export const createTask = (data: TaskCreateRequest): Promise<TaskResponse> =>
   api.post<TaskResponse>('/tasks', data).then((r) => r.data);
+
+export const updateTaskStatus = (id: number, data: TaskStatusUpdateRequest): Promise<TaskResponse> =>
+  api.patch<TaskResponse>(`/tasks/${id}/status`, data).then((r) => r.data);
+
+export const updateTask = (id: number, data: TaskUpdateRequest): Promise<TaskResponse> =>
+  api.patch<TaskResponse>(`/tasks/${id}`, data).then((r) => r.data);

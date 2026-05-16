@@ -5,8 +5,40 @@
   margin-bottom: 6px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   font-size: 13px;
-  cursor: default;
+  cursor: pointer;
   transition: box-shadow 0.15s;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.statusButton {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statusButton[data-status='todo'] {
+  background: #edf2f7;
+  color: #4a5568;
+}
+
+.statusButton[data-status='in_progress'] {
+  background: #ebf8ff;
+  color: #2b6cb0;
+}
+
+.statusButton[data-status='done'] {
+  background: #f0fff4;
+  color: #276749;
 }
 
 .card:hover {
@@ -20,7 +52,6 @@
   font-size: 11px;
   font-weight: bold;
   color: #fff;
-  margin-bottom: 4px;
 }
 
 .badge[data-priority='high'] {
