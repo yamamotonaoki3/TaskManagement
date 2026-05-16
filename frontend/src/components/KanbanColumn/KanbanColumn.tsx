@@ -20,7 +20,7 @@ interface KanbanColumnProps {
 
 export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onStatusChange, onUpdate }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { setNodeRef } = useDroppable({ id: listId });
+  const { setNodeRef } = useDroppable({ id: `col-${listId}` });
 
   return (
     <div className={styles.column}>

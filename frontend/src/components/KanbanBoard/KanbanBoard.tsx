@@ -21,45 +21,55 @@ export function KanbanBoard() {
   const handleDragOver = (event: DragOverEvent) => {
     const { over } = event;
     if (!over) { setOverColumnId(null); return; }
-    const overId = Number(over.id);
-    const allTasks = Object.values(columns).flat();
-    const overTask = allTasks.find(t => t.id === overId);
-    setOverColumnId(overTask ? overTask.listId : overId);
+    const overId = String(over.id);
+    if (overId.startsWith('col-')) {
+      setOverColumnId(Number(overId.replace('col-', '')));
+    } else {
+      const allTasks = Object.values(columns).flat();
+      const overTask = allTasks.find(t => t.id === Number(overId));
+      setOverColumnId(overTask ? overTask.listId : null);
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    if (!over) { setOverColumnId(null); return; }
 
     const taskId = Number(active.id);
-    const overId = Number(over.id);
+    const overId = String(over.id);
     const allTasks = Object.values(columns).flat();
     const activeTask = allTasks.find(t => t.id === taskId);
-    if (!activeTask) return;
+    if (!activeTask) { setOverColumnId(null); return; }
 
-    const overTask = allTasks.find(t => t.id === overId);
-
-    if (overTask) {
-      if (activeTask.listId === overTask.listId) {
-        // 同一カラム内: 並べ替え
-        const columnTasks = columns[activeTask.listName] ?? [];
-        const overIndex = columnTasks.findIndex(t => t.id === overId);
-        patchStatus(taskId, { status: activeTask.status, listId: activeTask.listId, position: overIndex });
-      } else {
-        // 別カラムのタスク上にドロップ: カラム間移動
-        const targetListName = lists.find(l => l.id === overTask.listId)?.name ?? '';
+    if (overId.startsWith('col-')) {
+      // カラムの空き領域にドロップ: カラム間移動
+      const targetListId = Number(overId.replace('col-', ''));
+      if (activeTask.listId !== targetListId) {
+        const targetListName = lists.find(l => l.id === targetListId)?.name ?? '';
         const targetStatus = LIST_NAME_TO_STATUS[targetListName] ?? activeTask.status;
-        const targetTasks = allTasks.filter(t => t.listId === overTask.listId);
-        patchStatus(taskId, { status: targetStatus, listId: overTask.listId, position: targetTasks.length });
+        const targetTasks = allTasks.filter(t => t.listId === targetListId);
+        patchStatus(taskId, { status: targetStatus, listId: targetListId, position: targetTasks.length });
       }
     } else {
-      // カラムの空き領域にドロップ: カラム間移動
-      const targetListId = overId;
-      if (activeTask.listId === targetListId) return;
-      const targetListName = lists.find(l => l.id === targetListId)?.name ?? '';
-      const targetStatus = LIST_NAME_TO_STATUS[targetListName] ?? activeTask.status;
-      const targetTasks = allTasks.filter(t => t.listId === targetListId);
-      patchStatus(taskId, { status: targetStatus, listId: targetListId, position: targetTasks.length });
+      // タスク上にドロップ
+      const overTaskId = Number(overId);
+      if (taskId !== overTaskId) {
+        const overTask = allTasks.find(t => t.id === overTaskId);
+        if (overTask) {
+          if (activeTask.listId === overTask.listId) {
+            // 同一カラム内: 並べ替え
+            const columnTasks = columns[activeTask.listName] ?? [];
+            const overIndex = columnTasks.findIndex(t => t.id === overTaskId);
+            patchStatus(taskId, { status: activeTask.status, listId: activeTask.listId, position: overIndex });
+          } else {
+            // 別カラムのタスク上にドロップ: カラム間移動
+            const targetListName = lists.find(l => l.id === overTask.listId)?.name ?? '';
+            const targetStatus = LIST_NAME_TO_STATUS[targetListName] ?? activeTask.status;
+            const targetTasks = allTasks.filter(t => t.listId === overTask.listId);
+            patchStatus(taskId, { status: targetStatus, listId: overTask.listId, position: targetTasks.length });
+          }
+        }
+      }
     }
     setOverColumnId(null);
   };
