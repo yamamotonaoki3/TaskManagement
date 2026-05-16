@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useDroppable } from '@dnd-kit/core';
 import type { TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../../types/task';
 import { TaskCard } from '../TaskCard/TaskCard';
 import { TaskCreateModal } from '../TaskCreateModal/TaskCreateModal';
@@ -17,6 +18,7 @@ interface KanbanColumnProps {
 
 export function KanbanColumn({ listId, listName, tasks, isSearching, showAddButton, onCreate, onStatusChange, onUpdate }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { setNodeRef, isOver } = useDroppable({ id: listId });
 
   return (
     <div className={styles.column}>
@@ -26,7 +28,7 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, showAddButt
           <button className={styles.addButton} onClick={() => setIsModalOpen(true)}>+ 追加</button>
         )}
       </div>
-      <div className={styles.cards}>
+      <div ref={setNodeRef} className={`${styles.cards} ${isOver ? styles.over : ''}`}>
         {tasks.length === 0 ? (
           <p className={styles.empty}>
             {isSearching ? '一致するタスクはありません' : 'カードはありません'}

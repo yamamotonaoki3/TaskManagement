@@ -41,6 +41,12 @@
 .cards {
   flex: 1;
   min-height: 40px;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.over {
+  background-color: #bee3f8;
 }
 
 .empty {
