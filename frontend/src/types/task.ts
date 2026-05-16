@@ -1,5 +1,11 @@
 export type Priority = 'high' | 'medium' | 'low' | null;
 
+export interface ListResponse {
+  id: number;
+  name: string;
+  position: number;
+}
+
 export interface TaskResponse {
   id: number;
   listId: number;
