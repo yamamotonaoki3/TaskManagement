@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDraggable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../../types/task';
 import { TaskDetailModal } from '../TaskDetailModal/TaskDetailModal';
@@ -31,11 +31,11 @@ interface TaskCardProps {
 
 export function TaskCard({ task, onStatusChange, onUpdate }: TaskCardProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
     attributes: { roleDescription: 'draggable task card' },
   });
-  const style = { transform: CSS.Translate.toString(transform) };
+  const style = { transform: CSS.Transform.toString(transform), transition };
 
   const handleStatusClick = (e: React.MouseEvent) => {
     e.stopPropagation();
