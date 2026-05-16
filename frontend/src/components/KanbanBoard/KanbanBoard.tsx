@@ -62,11 +62,17 @@ export function KanbanBoard() {
             const overIndex = columnTasks.findIndex(t => t.id === overTaskId);
             patchStatus(taskId, { status: activeTask.status, listId: activeTask.listId, position: overIndex });
           } else {
-            // 別カラムのタスク上にドロップ: カラム間移動
+            // 別カラムのタスク上にドロップ: カラム間移動（上/下半分で挿入位置を決定）
             const targetListName = lists.find(l => l.id === overTask.listId)?.name ?? '';
             const targetStatus = LIST_NAME_TO_STATUS[targetListName] ?? activeTask.status;
-            const targetTasks = allTasks.filter(t => t.listId === overTask.listId);
-            patchStatus(taskId, { status: targetStatus, listId: overTask.listId, position: targetTasks.length });
+            const targetTasks = columns[targetListName] ?? [];
+            const overIndex = targetTasks.findIndex(t => t.id === overTaskId);
+            const activeCenterY = active.rect.current.translated
+              ? (active.rect.current.translated.top + active.rect.current.translated.bottom) / 2
+              : 0;
+            const overMidY = (over.rect.top + over.rect.bottom) / 2;
+            const position = activeCenterY > overMidY ? overIndex + 1 : overIndex;
+            patchStatus(taskId, { status: targetStatus, listId: overTask.listId, position });
           }
         }
       }
