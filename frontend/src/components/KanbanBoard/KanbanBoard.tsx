@@ -11,7 +11,7 @@ const LIST_NAME_TO_STATUS: Record<string, 'todo' | 'in_progress' | 'done'> = {
 };
 
 export function KanbanBoard() {
-  const { columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask } = useTasks();
+  const { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask } = useTasks();
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
@@ -24,7 +24,7 @@ export function KanbanBoard() {
     const allTasks = Object.values(columns).flat();
     const task = allTasks.find(t => t.id === taskId);
     if (!task || task.listId === targetListId) return;
-    const targetListName = columnOrder.find(name => (columns[name]?.[0]?.listId ?? 0) === targetListId) ?? '';
+    const targetListName = lists.find(l => l.id === targetListId)?.name ?? '';
     const targetStatus = LIST_NAME_TO_STATUS[targetListName] ?? task.status;
     const targetTasks = allTasks.filter(t => t.listId === targetListId);
     patchStatus(taskId, { status: targetStatus, listId: targetListId, position: targetTasks.length });
@@ -41,7 +41,7 @@ export function KanbanBoard() {
             <div className={styles.columns}>
               {columnOrder.map((listName, index) => {
                 const tasks = columns[listName] ?? [];
-                const listId = tasks[0]?.listId ?? 0;
+                const listId = lists.find(l => l.name === listName)?.id ?? 0;
                 return (
                   <KanbanColumn
                     key={listName}
