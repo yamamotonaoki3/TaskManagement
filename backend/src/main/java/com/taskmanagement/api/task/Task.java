@@ -55,4 +55,14 @@ public class Task {
     public boolean isArchived() { return archived; }
     public int getPosition() { return position; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public void setTaskList(TaskList taskList) { this.taskList = taskList; }
+    public void setTitle(String title) { this.title = title; }
+    public void setDescription(String description) { this.description = description; }
+    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    public void setPriority(String priority) { this.priority = priority; }
+    public void setStatus(String status) { this.status = status; }
+    public void setArchived(boolean archived) { this.archived = archived; }
+    public void setPosition(int position) { this.position = position; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

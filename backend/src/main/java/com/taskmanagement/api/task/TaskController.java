@@ -1,5 +1,7 @@
 package com.taskmanagement.api.task;
 
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -26,5 +28,11 @@ public class TaskController {
     @GetMapping("/search")
     public List<TaskResponse> search(@RequestParam(required = false) String q) {
         return taskService.search(q);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public TaskResponse create(@RequestBody @Valid TaskRequest req) {
+        return taskService.create(req);
     }
 }
