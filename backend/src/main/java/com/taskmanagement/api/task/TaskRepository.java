@@ -21,4 +21,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     int findMaxPositionByListId(@Param("listId") Long listId);
 
     List<Task> findByTaskListIdAndArchivedFalseOrderByPositionAsc(Long listId);
+
+    long countByTaskListIdAndArchivedFalse(Long taskListId);
+
+    void deleteByTaskListId(Long taskListId);
 }

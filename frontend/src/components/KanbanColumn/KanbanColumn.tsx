@@ -21,12 +21,14 @@ interface KanbanColumnProps {
   onCreate: (data: TaskCreateRequest) => Promise<void>;
   onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
+  onDeleteList: (id: number) => Promise<void>;
   onReorder: (listId: number, taskIds: number[]) => Promise<void>;
 }
 
-export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onUpdate, onDelete, onReorder }: KanbanColumnProps) {
+export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onUpdate, onDelete, onDeleteList, onReorder }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const { setNodeRef: setDroppableRef } = useDroppable({ id: `col-${listId}` });
   const {
     setNodeRef: setSortableRef,
@@ -36,6 +38,17 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, sho
     transition,
     isDragging,
   } = useSortable({ id: `list-${listId}`, data: { type: 'column' } });
+
+  const handleDeleteList = async () => {
+    if (!window.confirm('このカラムを削除してもよろしいですか？')) return;
+    setDeleteError(null);
+    try {
+      await onDeleteList(listId);
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setDeleteError(msg ?? 'カラムの削除に失敗しました。');
+    }
+  };
 
   const handleSort = async (key: 'priority' | 'dueDate') => {
     const nextKey = sortKey === key ? null : key;
@@ -82,8 +95,10 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, sho
           {showAddButton && (
             <button className={styles.addButton} onClick={() => setIsModalOpen(true)}>+ 追加</button>
           )}
+          <button className={styles.deleteListButton} onClick={handleDeleteList} title="カラムを削除">✕</button>
         </div>
       </div>
+      {deleteError && <p className={styles.deleteError}>{deleteError}</p>}
       <div ref={setDroppableRef} className={`${styles.cards} ${isOver ? styles.over : ''}`}>
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.length === 0 ? (

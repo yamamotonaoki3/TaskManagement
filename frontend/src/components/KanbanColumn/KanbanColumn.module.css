@@ -97,3 +97,30 @@
   color: #a0aec0;
   text-align: center;
 }
+
+.deleteListButton {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #a0aec0;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.deleteListButton:hover {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.deleteError {
+  margin: 0 0 6px;
+  padding: 6px 8px;
+  background: #fff5f5;
+  border: 1px solid #fc8181;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #c53030;
+}

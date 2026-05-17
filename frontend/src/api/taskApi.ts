@@ -35,3 +35,6 @@ export const reorderLists = (listIds: number[]): Promise<void> =>
 
 export const archiveTask = (id: number): Promise<void> =>
   api.patch(`/tasks/${id}/archive`).then(() => {});
+
+export const deleteList = (id: number): Promise<void> =>
+  api.delete(`/lists/${id}`).then(() => {});
