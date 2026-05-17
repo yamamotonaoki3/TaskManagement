@@ -30,4 +30,9 @@ public class TaskList {
     public String getName() { return name; }
     public int getPosition() { return position; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+
+    public void setUserId(Long userId) { this.userId = userId; }
+    public void setName(String name) { this.name = name; }
+    public void setPosition(int position) { this.position = position; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
