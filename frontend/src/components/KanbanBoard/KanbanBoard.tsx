@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragOverEvent } from '@dnd-kit/core';
+import { useState, useRef } from 'react';
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
+import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { useTasks } from '../../hooks/useTasks';
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 import { Header } from '../Header/Header';
@@ -13,8 +14,9 @@ const LIST_NAME_TO_STATUS: Record<string, 'todo' | 'in_progress' | 'done'> = {
 };
 
 export function KanbanBoard() {
-  const { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask, addList, reorder } = useTasks();
+  const { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask, addList, reorder, reorderColumns } = useTasks();
   const [overColumnId, setOverColumnId] = useState<number | null>(null);
+  const activeTypeRef = useRef<'column' | 'task' | null>(null);
   const [showAddList, setShowAddList] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [addingList, setAddingList] = useState(false);
@@ -31,7 +33,12 @@ export function KanbanBoard() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    activeTypeRef.current = event.active.data.current?.type ?? 'task';
+  };
+
   const handleDragOver = (event: DragOverEvent) => {
+    if (activeTypeRef.current === 'column') return;
     const { over } = event;
     if (!over) { setOverColumnId(null); return; }
     const overId = String(over.id);
@@ -46,7 +53,28 @@ export function KanbanBoard() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) { setOverColumnId(null); return; }
+    if (!over) {
+      activeTypeRef.current = null;
+      setOverColumnId(null);
+      return;
+    }
+
+    if (activeTypeRef.current === 'column') {
+      const activeListId = Number(String(active.id).replace('list-', ''));
+      const overIdStr = String(over.id);
+      const overListId = overIdStr.startsWith('col-')
+        ? Number(overIdStr.replace('col-', ''))
+        : Number(overIdStr.replace('list-', ''));
+      if (activeListId !== overListId) {
+        const currentOrder = columnOrder.map(name => lists.find(l => l.name === name)?.id ?? 0);
+        const fromIndex = currentOrder.indexOf(activeListId);
+        const toIndex = currentOrder.indexOf(overListId);
+        const reorderedIds = arrayMove(currentOrder, fromIndex, toIndex);
+        reorderColumns(reorderedIds);
+      }
+      activeTypeRef.current = null;
+      return;
+    }
 
     const taskId = Number(active.id);
     const overId = String(over.id);
@@ -90,6 +118,7 @@ export function KanbanBoard() {
         }
       }
     }
+    activeTypeRef.current = null;
     setOverColumnId(null);
   };
 
@@ -100,7 +129,11 @@ export function KanbanBoard() {
         {loading && <p className={styles.status}>読み込み中...</p>}
         {error && <p className={styles.error}>{error}</p>}
         {!loading && !error && (
-          <DndContext sensors={sensors} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={columnOrder.map(name => `list-${lists.find(l => l.name === name)?.id ?? 0}`)}
+              strategy={horizontalListSortingStrategy}
+            >
             <div className={styles.columns}>
               {columnOrder.map((listName, index) => {
                 const tasks = columns[listName] ?? [];
@@ -121,6 +154,7 @@ export function KanbanBoard() {
                 );
               })}
             </div>
+            </SortableContext>
           </DndContext>
         )}
       </main>

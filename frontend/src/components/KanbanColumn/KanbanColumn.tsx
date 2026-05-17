@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { TaskCreateRequest, TaskResponse, TaskUpdateRequest } from '../../types/task';
 import { TaskCard } from '../TaskCard/TaskCard';
 import { TaskCreateModal } from '../TaskCreateModal/TaskCreateModal';
@@ -25,7 +26,15 @@ interface KanbanColumnProps {
 export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onUpdate, onReorder }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>(null);
-  const { setNodeRef } = useDroppable({ id: `col-${listId}` });
+  const { setNodeRef: setDroppableRef } = useDroppable({ id: `col-${listId}` });
+  const {
+    setNodeRef: setSortableRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `list-${listId}`, data: { type: 'column' } });
 
   const handleSort = async (key: 'priority' | 'dueDate') => {
     const nextKey = sortKey === key ? null : key;
@@ -45,9 +54,16 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, sho
     await onReorder(listId, sorted.map(t => t.id));
   };
 
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : undefined,
+  };
+
   return (
-    <div className={styles.column}>
+    <div ref={setSortableRef} className={styles.column} style={style}>
       <div className={styles.header}>
+        <div className={styles.dragHandle} {...attributes} {...listeners}>⠿</div>
         <h2 className={styles.heading}>{listName}</h2>
         <div className={styles.headerRight}>
           <button
@@ -67,7 +83,7 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, sho
           )}
         </div>
       </div>
-      <div ref={setNodeRef} className={`${styles.cards} ${isOver ? styles.over : ''}`}>
+      <div ref={setDroppableRef} className={`${styles.cards} ${isOver ? styles.over : ''}`}>
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.length === 0 ? (
             <p className={styles.empty}>
