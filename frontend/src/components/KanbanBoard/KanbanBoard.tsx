@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
+import { useState, useRef, useCallback } from 'react';
+import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, rectIntersection, type CollisionDetection, type DragEndEvent, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { useTasks } from '../../hooks/useTasks';
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
@@ -33,6 +33,18 @@ export function KanbanBoard() {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    if (args.active.data.current?.type === 'column') {
+      return closestCenter({
+        ...args,
+        droppableContainers: args.droppableContainers.filter(
+          c => String(c.id).startsWith('list-')
+        ),
+      });
+    }
+    return rectIntersection(args);
+  }, []);
+
   const handleDragStart = (event: DragStartEvent) => {
     activeTypeRef.current = event.active.data.current?.type ?? 'task';
   };
@@ -62,11 +74,22 @@ export function KanbanBoard() {
     if (activeTypeRef.current === 'column') {
       const activeListId = Number(String(active.id).replace('list-', ''));
       const overIdStr = String(over.id);
-      const overListId = overIdStr.startsWith('col-')
-        ? Number(overIdStr.replace('col-', ''))
-        : Number(overIdStr.replace('list-', ''));
+      let overListId: number;
+      if (overIdStr.startsWith('col-')) {
+        overListId = Number(overIdStr.replace('col-', ''));
+      } else if (overIdStr.startsWith('list-')) {
+        overListId = Number(overIdStr.replace('list-', ''));
+      } else {
+        // over.id がタスクID → そのタスクが属するリストIDを取得
+        const allTasks = Object.values(columns).flat();
+        const overTask = allTasks.find(t => t.id === Number(overIdStr));
+        if (!overTask) { activeTypeRef.current = null; return; }
+        overListId = overTask.listId;
+      }
       if (activeListId !== overListId) {
-        const currentOrder = columnOrder.map(name => lists.find(l => l.name === name)?.id ?? 0);
+        const currentOrder = columnOrder
+          .map(name => lists.find(l => l.name === name)?.id)
+          .filter((id): id is number => id !== undefined);
         const fromIndex = currentOrder.indexOf(activeListId);
         const toIndex = currentOrder.indexOf(overListId);
         const reorderedIds = arrayMove(currentOrder, fromIndex, toIndex);
@@ -129,15 +152,20 @@ export function KanbanBoard() {
         {loading && <p className={styles.status}>読み込み中...</p>}
         {error && <p className={styles.error}>{error}</p>}
         {!loading && !error && (
-          <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
             <SortableContext
-              items={columnOrder.map(name => `list-${lists.find(l => l.name === name)?.id ?? 0}`)}
+              items={columnOrder
+                .map(name => lists.find(l => l.name === name)?.id)
+                .filter((id): id is number => id !== undefined)
+                .map(id => `list-${id}`)
+              }
               strategy={horizontalListSortingStrategy}
             >
             <div className={styles.columns}>
               {columnOrder.map((listName, index) => {
                 const tasks = columns[listName] ?? [];
-                const listId = lists.find(l => l.name === listName)?.id ?? 0;
+                const listId = lists.find(l => l.name === listName)?.id;
+                if (listId === undefined) return null;
                 return (
                   <KanbanColumn
                     key={listName}
