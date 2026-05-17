@@ -14,7 +14,7 @@ const LIST_NAME_TO_STATUS: Record<string, 'todo' | 'in_progress' | 'done'> = {
 };
 
 export function KanbanBoard() {
-  const { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask, addList, reorder, reorderColumns } = useTasks();
+  const { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask, addList, reorder, reorderColumns, deleteTask } = useTasks();
   const [overColumnId, setOverColumnId] = useState<number | null>(null);
   const activeTypeRef = useRef<'column' | 'task' | null>(null);
   const [showAddList, setShowAddList] = useState(false);
@@ -149,6 +149,7 @@ export function KanbanBoard() {
                     showAddButton={index === 0}
                     onCreate={create}
                     onUpdate={patchTask}
+                    onDelete={deleteTask}
                     onReorder={reorder}
                   />
                 );

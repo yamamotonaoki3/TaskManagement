@@ -14,9 +14,10 @@ const PRIORITY_LABEL: Record<string, string> = {
 interface TaskCardProps {
   task: TaskResponse;
   onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
 }
 
-export function TaskCard({ task, onUpdate }: TaskCardProps) {
+export function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -51,6 +52,7 @@ export function TaskCard({ task, onUpdate }: TaskCardProps) {
           task={task}
           onClose={() => setIsDetailOpen(false)}
           onUpdate={onUpdate}
+          onDelete={onDelete}
         />
       )}
     </>

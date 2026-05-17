@@ -125,6 +125,14 @@ public class TaskService {
         taskRepository.saveAll(tasks);
     }
 
+    @Transactional
+    public void archive(Long id) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id));
+        task.setArchived(true);
+        taskRepository.save(task);
+    }
+
     public List<TaskResponse> search(String query) {
         if (query == null || query.isBlank()) {
             return taskRepository.findAll()

@@ -6,15 +6,26 @@ interface TaskDetailModalProps {
   task: TaskResponse;
   onClose: () => void;
   onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
 }
 
-export function TaskDetailModal({ task, onClose, onUpdate }: TaskDetailModalProps) {
+export function TaskDetailModal({ task, onClose, onUpdate, onDelete }: TaskDetailModalProps) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? '');
   const [dueDate, setDueDate] = useState(task.dueDate ?? '');
   const [priority, setPriority] = useState(task.priority ?? 'medium');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!window.confirm('このカードを削除してもよろしいですか？')) return;
+    try {
+      await onDelete(task.id);
+      onClose();
+    } catch {
+      setError('削除に失敗しました。もう一度お試しください。');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +94,9 @@ export function TaskDetailModal({ task, onClose, onUpdate }: TaskDetailModalProp
           </label>
           {error && <p className={styles.error}>{error}</p>}
           <div className={styles.actions}>
+            <button type="button" className={styles.deleteButton} onClick={handleDelete}>
+              削除する
+            </button>
             <button type="button" className={styles.cancelButton} onClick={onClose}>
               キャンセル
             </button>

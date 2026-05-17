@@ -20,10 +20,11 @@ interface KanbanColumnProps {
   showAddButton: boolean;
   onCreate: (data: TaskCreateRequest) => Promise<void>;
   onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
   onReorder: (listId: number, taskIds: number[]) => Promise<void>;
 }
 
-export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onUpdate, onReorder }: KanbanColumnProps) {
+export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onUpdate, onDelete, onReorder }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const { setNodeRef: setDroppableRef } = useDroppable({ id: `col-${listId}` });
@@ -95,6 +96,7 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, sho
                 key={task.id}
                 task={task}
                 onUpdate={onUpdate}
+                onDelete={onDelete}
               />
             ))
           )}

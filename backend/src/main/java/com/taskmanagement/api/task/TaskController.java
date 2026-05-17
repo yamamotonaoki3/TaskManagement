@@ -48,4 +48,10 @@ public class TaskController {
     public TaskResponse updateTask(@PathVariable Long id, @RequestBody @Valid TaskUpdateRequest req) {
         return taskService.updateTask(id, req);
     }
+
+    @PatchMapping("/{id}/archive")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void archive(@PathVariable Long id) {
+        taskService.archive(id);
+    }
 }
