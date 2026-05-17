@@ -43,3 +43,7 @@ export interface TaskUpdateRequest {
   dueDate?: string | null;
   priority?: 'high' | 'medium' | 'low';
 }
+
+export interface ListCreateRequest {
+  name: string;
+}

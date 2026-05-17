@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchAllLists, fetchAllTasks, searchTasks, createTask, updateTaskStatus, updateTask } from '../api/taskApi';
-import type { KanbanColumns, ListResponse, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
+import { fetchAllLists, fetchAllTasks, searchTasks, createTask, updateTaskStatus, updateTask, createList as createListApi } from '../api/taskApi';
+import type { KanbanColumns, ListCreateRequest, ListResponse, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
 
 export function useTasks() {
   const [query, setQuery] = useState('');
@@ -51,5 +51,10 @@ export function useTasks() {
     await refresh();
   };
 
-  return { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask };
+  const addList = async (data: ListCreateRequest) => {
+    await createListApi(data);
+    await refresh();
+  };
+
+  return { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask, addList };
 }

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ListResponse, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
+import type { ListCreateRequest, ListResponse, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
@@ -8,6 +8,9 @@ const api = axios.create({
 
 export const fetchAllLists = (): Promise<ListResponse[]> =>
   api.get<ListResponse[]>('/lists').then((r) => r.data);
+
+export const createList = (data: ListCreateRequest): Promise<ListResponse> =>
+  api.post<ListResponse>('/lists', data).then((r) => r.data);
 
 export const fetchAllTasks = (): Promise<TaskResponse[]> =>
   api.get<TaskResponse[]>('/tasks').then((r) => r.data);
