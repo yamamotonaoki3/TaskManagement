@@ -4,6 +4,7 @@ import { useTasks } from '../../hooks/useTasks';
 import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 import { Header } from '../Header/Header';
 import styles from './KanbanBoard.module.css';
+import modalStyles from '../TaskCreateModal/TaskCreateModal.module.css';
 
 const LIST_NAME_TO_STATUS: Record<string, 'todo' | 'in_progress' | 'done'> = {
   'やること': 'todo',
@@ -12,8 +13,20 @@ const LIST_NAME_TO_STATUS: Record<string, 'todo' | 'in_progress' | 'done'> = {
 };
 
 export function KanbanBoard() {
-  const { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask } = useTasks();
+  const { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask, addList } = useTasks();
   const [overColumnId, setOverColumnId] = useState<number | null>(null);
+  const [showAddList, setShowAddList] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [addingList, setAddingList] = useState(false);
+
+  const handleCreateList = async () => {
+    if (!newListName.trim()) return;
+    setAddingList(true);
+    await addList({ name: newListName.trim() });
+    setNewListName('');
+    setShowAddList(false);
+    setAddingList(false);
+  };
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
@@ -82,7 +95,7 @@ export function KanbanBoard() {
 
   return (
     <div className={styles.wrapper}>
-      <Header query={query} onQueryChange={setQuery} />
+      <Header query={query} onQueryChange={setQuery} onAddColumn={() => setShowAddList(true)} />
       <main className={styles.board}>
         {loading && <p className={styles.status}>読み込み中...</p>}
         {error && <p className={styles.error}>{error}</p>}
@@ -111,6 +124,44 @@ export function KanbanBoard() {
           </DndContext>
         )}
       </main>
+      {showAddList && (
+        <div className={modalStyles.overlay} onClick={() => setShowAddList(false)}>
+          <div className={modalStyles.modal} onClick={(e) => e.stopPropagation()}>
+            <h3 className={modalStyles.title}>カラムを追加</h3>
+            <div className={modalStyles.form}>
+              <label className={modalStyles.label}>
+                カラム名 <span className={modalStyles.required}>*</span>
+                <input
+                  className={modalStyles.input}
+                  type="text"
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  placeholder="カラム名を入力"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList(); }}
+                />
+              </label>
+              <div className={modalStyles.actions}>
+                <button
+                  type="button"
+                  className={modalStyles.cancelButton}
+                  onClick={() => { setShowAddList(false); setNewListName(''); }}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className={modalStyles.submitButton}
+                  disabled={!newListName.trim() || addingList}
+                  onClick={handleCreateList}
+                >
+                  {addingList ? '追加中...' : '追加する'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
