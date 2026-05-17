@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchAllLists, fetchAllTasks, searchTasks, createTask, updateTaskStatus, updateTask, createList as createListApi, reorderTasks, reorderLists as reorderListsApi, archiveTask } from '../api/taskApi';
+import { fetchAllLists, fetchAllTasks, searchTasks, createTask, updateTaskStatus, updateTask, createList as createListApi, reorderTasks, reorderLists as reorderListsApi, archiveTask, deleteList } from '../api/taskApi';
 import type { KanbanColumns, ListCreateRequest, ListResponse, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
 
 export function useTasks() {
@@ -66,6 +66,11 @@ export function useTasks() {
     await refresh();
   };
 
+  const removeList = async (id: number) => {
+    await deleteList(id);
+    await refresh();
+  };
+
   const reorderColumns = async (listIds: number[]) => {
     const optimisticOrder = listIds
       .map(id => lists.find(l => l.id === id)?.name ?? '')
@@ -76,5 +81,5 @@ export function useTasks() {
     await refresh();
   };
 
-  return { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask, addList, reorder, reorderColumns, deleteTask };
+  return { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask, addList, reorder, reorderColumns, deleteTask, removeList };
 }

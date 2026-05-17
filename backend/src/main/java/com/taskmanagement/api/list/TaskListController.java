@@ -36,6 +36,12 @@ public class TaskListController {
         taskListService.reorderLists(req.listIds());
     }
 
+    @DeleteMapping("/{listId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long listId) {
+        taskListService.delete(listId);
+    }
+
     @PatchMapping("/{listId}/tasks/reorder")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void reorderTasks(@PathVariable Long listId,

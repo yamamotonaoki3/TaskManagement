@@ -2,6 +2,7 @@ package com.taskmanagement.api.list;
 
 import com.taskmanagement.api.task.Task;
 import com.taskmanagement.api.task.TaskRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +45,18 @@ public class TaskListService {
             if (l != null) l.setPosition(i);
         }
         taskListRepository.saveAll(lists);
+    }
+
+    @Transactional
+    public void delete(Long listId) {
+        TaskList list = taskListRepository.findById(listId)
+                .orElseThrow(() -> new EntityNotFoundException("リストが見つかりません: " + listId));
+        long taskCount = taskRepository.countByTaskListIdAndArchivedFalse(listId);
+        if (taskCount > 0) {
+            throw new IllegalStateException("タスクが残っているカラムは削除できません");
+        }
+        taskRepository.deleteByTaskListId(listId);
+        taskListRepository.delete(list);
     }
 
     public List<TaskListResponse> findAll() {
