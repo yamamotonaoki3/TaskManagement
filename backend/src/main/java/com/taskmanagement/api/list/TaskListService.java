@@ -5,6 +5,7 @@ import com.taskmanagement.api.task.TaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,6 +20,18 @@ public class TaskListService {
     public TaskListService(TaskListRepository taskListRepository, TaskRepository taskRepository) {
         this.taskListRepository = taskListRepository;
         this.taskRepository = taskRepository;
+    }
+
+    @Transactional
+    public TaskListResponse create(TaskListRequest req) {
+        int nextPosition = taskListRepository.findMaxPosition() + 1;
+        TaskList list = new TaskList();
+        list.setUserId(1L);
+        list.setName(req.name());
+        list.setPosition(nextPosition);
+        list.setCreatedAt(LocalDateTime.now());
+        TaskList saved = taskListRepository.save(list);
+        return TaskListResponse.from(saved, List.of());
     }
 
     public List<TaskListResponse> findAll() {
