@@ -21,31 +21,6 @@
   margin-bottom: 4px;
 }
 
-.statusButton {
-  font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.statusButton[data-status='todo'] {
-  background: #edf2f7;
-  color: #4a5568;
-}
-
-.statusButton[data-status='in_progress'] {
-  background: #ebf8ff;
-  color: #2b6cb0;
-}
-
-.statusButton[data-status='done'] {
-  background: #f0fff4;
-  color: #276749;
-}
-
 .card:hover {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }

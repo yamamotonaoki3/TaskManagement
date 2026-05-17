@@ -115,7 +115,6 @@ export function KanbanBoard() {
                     isOver={overColumnId === listId}
                     showAddButton={index === 0}
                     onCreate={create}
-                    onStatusChange={patchStatus}
                     onUpdate={patchTask}
                   />
                 );
