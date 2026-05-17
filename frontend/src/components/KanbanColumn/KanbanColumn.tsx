@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import type { TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../../types/task';
+import type { TaskCreateRequest, TaskResponse, TaskUpdateRequest } from '../../types/task';
 import { TaskCard } from '../TaskCard/TaskCard';
 import { TaskCreateModal } from '../TaskCreateModal/TaskCreateModal';
 import styles from './KanbanColumn.module.css';
@@ -14,11 +14,10 @@ interface KanbanColumnProps {
   isOver: boolean;
   showAddButton: boolean;
   onCreate: (data: TaskCreateRequest) => Promise<void>;
-  onStatusChange: (id: number, data: TaskStatusUpdateRequest) => Promise<void>;
   onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
 }
 
-export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onStatusChange, onUpdate }: KanbanColumnProps) {
+export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onUpdate }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { setNodeRef } = useDroppable({ id: `col-${listId}` });
 
@@ -41,7 +40,6 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, sho
               <TaskCard
                 key={task.id}
                 task={task}
-                onStatusChange={onStatusChange}
                 onUpdate={onUpdate}
               />
             ))
