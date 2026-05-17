@@ -34,6 +34,18 @@ public class TaskListService {
         return TaskListResponse.from(saved, List.of());
     }
 
+    @Transactional
+    public void reorderLists(List<Long> listIds) {
+        List<TaskList> lists = taskListRepository.findAllByOrderByPositionAsc();
+        Map<Long, TaskList> listMap = lists.stream()
+                .collect(Collectors.toMap(TaskList::getId, l -> l));
+        for (int i = 0; i < listIds.size(); i++) {
+            TaskList l = listMap.get(listIds.get(i));
+            if (l != null) l.setPosition(i);
+        }
+        taskListRepository.saveAll(lists);
+    }
+
     public List<TaskListResponse> findAll() {
         List<TaskList> lists = taskListRepository.findAllByOrderByPositionAsc();
 

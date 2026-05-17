@@ -30,6 +30,12 @@ public class TaskListController {
         return taskListService.create(req);
     }
 
+    @PatchMapping("/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reorderLists(@RequestBody @Valid ListReorderRequest req) {
+        taskListService.reorderLists(req.listIds());
+    }
+
     @PatchMapping("/{listId}/tasks/reorder")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void reorderTasks(@PathVariable Long listId,
