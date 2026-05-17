@@ -2,6 +2,7 @@ package com.taskmanagement.api.task;
 
 import com.taskmanagement.api.list.TaskList;
 import com.taskmanagement.api.list.TaskListRepository;
+import com.taskmanagement.api.task.dto.TaskReorderRequest;
 import com.taskmanagement.api.task.dto.TaskRequest;
 import com.taskmanagement.api.task.dto.TaskStatusRequest;
 import com.taskmanagement.api.task.dto.TaskUpdateRequest;
@@ -13,7 +14,9 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.SequencedCollection;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -109,6 +112,17 @@ public class TaskService {
         if (req.priority() != null) task.setPriority(req.priority());
 
         return TaskResponse.from(taskRepository.save(task));
+    }
+
+    @Transactional
+    public void reorderByIds(Long listId, List<Long> taskIds) {
+        List<Task> tasks = taskRepository.findByTaskListIdAndArchivedFalseOrderByPositionAsc(listId);
+        Map<Long, Task> taskMap = tasks.stream().collect(Collectors.toMap(Task::getId, t -> t));
+        for (int i = 0; i < taskIds.size(); i++) {
+            Task t = taskMap.get(taskIds.get(i));
+            if (t != null) t.setPosition(i);
+        }
+        taskRepository.saveAll(tasks);
     }
 
     public List<TaskResponse> search(String query) {
