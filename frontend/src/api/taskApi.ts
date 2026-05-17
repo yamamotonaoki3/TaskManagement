@@ -26,3 +26,6 @@ export const updateTaskStatus = (id: number, data: TaskStatusUpdateRequest): Pro
 
 export const updateTask = (id: number, data: TaskUpdateRequest): Promise<TaskResponse> =>
   api.patch<TaskResponse>(`/tasks/${id}`, data).then((r) => r.data);
+
+export const reorderTasks = (listId: number, taskIds: number[]): Promise<void> =>
+  api.patch(`/lists/${listId}/tasks/reorder`, { taskIds }).then(() => {});

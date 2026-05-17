@@ -6,6 +6,10 @@ import { TaskCard } from '../TaskCard/TaskCard';
 import { TaskCreateModal } from '../TaskCreateModal/TaskCreateModal';
 import styles from './KanbanColumn.module.css';
 
+type SortKey = 'priority' | 'dueDate' | null;
+
+const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
+
 interface KanbanColumnProps {
   listId: number;
   listName: string;
@@ -15,19 +19,53 @@ interface KanbanColumnProps {
   showAddButton: boolean;
   onCreate: (data: TaskCreateRequest) => Promise<void>;
   onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
+  onReorder: (listId: number, taskIds: number[]) => Promise<void>;
 }
 
-export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onUpdate }: KanbanColumnProps) {
+export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onUpdate, onReorder }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>(null);
   const { setNodeRef } = useDroppable({ id: `col-${listId}` });
+
+  const handleSort = async (key: 'priority' | 'dueDate') => {
+    const nextKey = sortKey === key ? null : key;
+    setSortKey(nextKey);
+    if (nextKey === null) return;
+    const sorted = [...tasks].sort((a, b) => {
+      if (nextKey === 'priority') {
+        const pa = a.priority != null ? PRIORITY_ORDER[a.priority] : 3;
+        const pb = b.priority != null ? PRIORITY_ORDER[b.priority] : 3;
+        return pa - pb;
+      }
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+    await onReorder(listId, sorted.map(t => t.id));
+  };
 
   return (
     <div className={styles.column}>
       <div className={styles.header}>
         <h2 className={styles.heading}>{listName}</h2>
-        {showAddButton && (
-          <button className={styles.addButton} onClick={() => setIsModalOpen(true)}>+ 追加</button>
-        )}
+        <div className={styles.headerRight}>
+          <button
+            className={`${styles.sortButton} ${sortKey === 'priority' ? styles.sortActive : ''}`}
+            onClick={() => handleSort('priority')}
+          >
+            優先度順
+          </button>
+          <button
+            className={`${styles.sortButton} ${sortKey === 'dueDate' ? styles.sortActive : ''}`}
+            onClick={() => handleSort('dueDate')}
+          >
+            期限順
+          </button>
+          {showAddButton && (
+            <button className={styles.addButton} onClick={() => setIsModalOpen(true)}>+ 追加</button>
+          )}
+        </div>
       </div>
       <div ref={setNodeRef} className={`${styles.cards} ${isOver ? styles.over : ''}`}>
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
