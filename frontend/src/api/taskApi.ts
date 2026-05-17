@@ -29,3 +29,6 @@ export const updateTask = (id: number, data: TaskUpdateRequest): Promise<TaskRes
 
 export const reorderTasks = (listId: number, taskIds: number[]): Promise<void> =>
   api.patch(`/lists/${listId}/tasks/reorder`, { taskIds }).then(() => {});
+
+export const reorderLists = (listIds: number[]): Promise<void> =>
+  api.patch('/lists/reorder', { listIds }).then(() => {});
