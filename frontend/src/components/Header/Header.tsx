@@ -3,10 +3,9 @@ import styles from './Header.module.css';
 interface HeaderProps {
   query: string;
   onQueryChange: (q: string) => void;
-  onAddColumn: () => void;
 }
 
-export function Header({ query, onQueryChange, onAddColumn }: HeaderProps) {
+export function Header({ query, onQueryChange }: HeaderProps) {
   return (
     <header className={styles.header}>
       <span className={styles.logo}>TaskBoard</span>
@@ -18,9 +17,6 @@ export function Header({ query, onQueryChange, onAddColumn }: HeaderProps) {
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
         />
-        <button className={styles.addColumnButton} onClick={onAddColumn}>
-          ＋ カラムを追加
-        </button>
       </div>
     </header>
   );
