@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchAllLists, fetchAllTasks, searchTasks, createTask, updateTaskStatus, updateTask, createList as createListApi, reorderTasks, reorderLists as reorderListsApi, archiveTask, deleteList } from '../api/taskApi';
+import { fetchAllLists, fetchAllTasks, searchTasks, createTask, updateTaskStatus, updateTask, createList as createListApi, reorderTasks, reorderLists as reorderListsApi, archiveTask, permanentlyDeleteTask, deleteList } from '../api/taskApi';
 import type { KanbanColumns, ListCreateRequest, ListResponse, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
 
 export function useTasks() {
@@ -62,7 +62,13 @@ export function useTasks() {
   };
 
   const deleteTask = async (id: number) => {
-    await archiveTask(id);
+    const allTasks = Object.values(columns).flat();
+    const task = allTasks.find((t) => t.id === id);
+    if (task?.status === 'done') {
+      await archiveTask(id);
+    } else {
+      await permanentlyDeleteTask(id);
+    }
     await refresh();
   };
 

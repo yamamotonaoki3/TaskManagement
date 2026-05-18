@@ -13,7 +13,11 @@ const LIST_NAME_TO_STATUS: Record<string, 'todo' | 'in_progress' | 'done'> = {
   '完了': 'done',
 };
 
-export function KanbanBoard() {
+interface KanbanBoardProps {
+  onOpenCompleted: () => void;
+}
+
+export function KanbanBoard({ onOpenCompleted }: KanbanBoardProps) {
   const { lists, columns, columnOrder, loading, error, query, setQuery, create, patchStatus, patchTask, addList, reorder, reorderColumns, deleteTask, removeList } = useTasks();
   const [overColumnId, setOverColumnId] = useState<number | null>(null);
   const activeTypeRef = useRef<'column' | 'task' | null>(null);
@@ -192,6 +196,9 @@ export function KanbanBoard() {
       <footer className={styles.footer}>
         <button className={styles.addListButton} onClick={() => setShowAddList(true)}>
           ＋ タスクリスト追加
+        </button>
+        <button className={styles.completedButton} onClick={onOpenCompleted}>
+          完了タスク一覧
         </button>
       </footer>
       {showAddList && (
