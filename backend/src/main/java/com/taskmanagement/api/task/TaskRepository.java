@@ -22,6 +22,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByTaskListIdAndArchivedFalseOrderByPositionAsc(Long listId);
 
+    List<Task> findByStatusOrderByCompletedAtDesc(String status);
+
     long countByTaskListIdAndArchivedFalse(Long taskListId);
 
     void deleteByTaskListId(Long taskListId);

@@ -140,6 +140,58 @@ public class TaskService {
         taskRepository.save(task);
     }
 
+    @Transactional
+    public void deleteById(Long id) {
+        if (!taskRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id);
+        }
+        taskRepository.deleteById(id);
+    }
+
+    public List<TaskResponse> searchCompleted(String titleQ, String descQ) {
+        List<Task> done = taskRepository.findByStatusOrderByCompletedAtDesc("done");
+
+        boolean hasTitleQ = titleQ != null && !titleQ.isBlank();
+        boolean hasDescQ = descQ != null && !descQ.isBlank();
+
+        if (!hasTitleQ && !hasDescQ) {
+            return done.stream().map(TaskResponse::from).toList();
+        }
+
+        LinkedHashSet<Task> results = new LinkedHashSet<>();
+
+        if (hasTitleQ && titleQ != null) {
+            String[] titleWords = titleQ.trim().split("\\s+");
+            for (Task t : done) {
+                String lowerTitle = t.getTitle().toLowerCase();
+                for (String word : titleWords) {
+                    if (lowerTitle.contains(word.toLowerCase())) {
+                        results.add(t);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (hasDescQ && descQ != null) {
+            String[] descWords = descQ.trim().split("\\s+");
+            for (Task t : done) {
+                if (t.getDescription() == null) {
+                    continue;
+                }
+                String lowerDesc = t.getDescription().toLowerCase();
+                for (String word : descWords) {
+                    if (lowerDesc.contains(word.toLowerCase())) {
+                        results.add(t);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return results.stream().map(TaskResponse::from).toList();
+    }
+
     public List<TaskResponse> search(String query) {
         if (query == null || query.isBlank()) {
             return taskRepository.findAll()

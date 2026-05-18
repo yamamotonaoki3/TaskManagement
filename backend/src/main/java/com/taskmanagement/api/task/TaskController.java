@@ -6,6 +6,7 @@ import com.taskmanagement.api.task.dto.TaskUpdateRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +42,13 @@ public class TaskController {
         return taskService.search(q);
     }
 
+    @GetMapping("/completed")
+    public List<TaskResponse> completed(
+            @RequestParam(required = false) String titleQ,
+            @RequestParam(required = false) String descQ) {
+        return taskService.searchCompleted(titleQ, descQ);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TaskResponse create(@RequestBody @Valid TaskRequest req) {
@@ -61,5 +69,11 @@ public class TaskController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void archive(@PathVariable Long id) {
         taskService.archive(id);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        taskService.deleteById(id);
     }
 }
