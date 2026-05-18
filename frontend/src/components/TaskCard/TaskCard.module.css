@@ -57,3 +57,28 @@
   font-size: 11px;
   color: #718096;
 }
+
+.deleteBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a0aec0;
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: color 0.1s, background 0.1s;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card:hover .deleteBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.deleteBtn:hover {
+  color: #e53e3e;
+  background: #fff5f5;
+}

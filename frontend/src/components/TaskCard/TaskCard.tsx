@@ -35,13 +35,26 @@ export function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
         className={`${styles.card} ${isDragging ? styles.dragging : ''}`}
         onClick={() => !isDragging && setIsDetailOpen(true)}
       >
-        {task.priority && (
-          <div className={styles.cardTop}>
+        <div className={styles.cardTop}>
+          {task.priority && (
             <span className={styles.badge} data-priority={task.priority}>
               {PRIORITY_LABEL[task.priority]}
             </span>
-          </div>
-        )}
+          )}
+          <button
+            className={styles.deleteBtn}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm('このタスクを削除しますか？')) {
+                onDelete(task.id);
+              }
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            aria-label="タスクを削除"
+          >
+            ×
+          </button>
+        </div>
         <p className={styles.title}>{task.title}</p>
         {task.dueDate && (
           <p className={styles.due}>期限: {task.dueDate}</p>
