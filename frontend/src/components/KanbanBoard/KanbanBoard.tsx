@@ -1,11 +1,12 @@
-import { useState, useRef, useCallback } from 'react';
-import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, rectIntersection, type CollisionDetection, type DragEndEvent, type DragOverEvent, type DragStartEvent } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { closestCenter, type CollisionDetection, DndContext, type DragEndEvent, type DragOverEvent, type DragStartEvent,PointerSensor, rectIntersection, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove,horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
+import { useCallback,useRef, useState } from 'react';
+
 import { useTasks } from '../../hooks/useTasks';
-import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 import { Header } from '../Header/Header';
-import styles from './KanbanBoard.module.css';
+import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 import modalStyles from '../TaskCreateModal/TaskCreateModal.module.css';
+import styles from './KanbanBoard.module.css';
 
 const LIST_NAME_TO_STATUS: Record<string, 'todo' | 'in_progress' | 'done'> = {
   'やること': 'todo',
@@ -91,9 +92,7 @@ export function KanbanBoard({ onOpenCompleted }: KanbanBoardProps) {
         overListId = overTask.listId;
       }
       if (activeListId !== overListId) {
-        const currentOrder = columnOrder
-          .map(name => lists.find(l => l.name === name)?.id)
-          .filter((id): id is number => id !== undefined);
+        const currentOrder = columnOrder.map(id => Number(id));
         const fromIndex = currentOrder.indexOf(activeListId);
         const toIndex = currentOrder.indexOf(overListId);
         const reorderedIds = arrayMove(currentOrder, fromIndex, toIndex);
@@ -126,14 +125,14 @@ export function KanbanBoard({ onOpenCompleted }: KanbanBoardProps) {
         if (overTask) {
           if (activeTask.listId === overTask.listId) {
             // 同一カラム内: 並べ替え
-            const columnTasks = columns[activeTask.listName] ?? [];
+            const columnTasks = columns[String(activeTask.listId)] ?? [];
             const overIndex = columnTasks.findIndex(t => t.id === overTaskId);
             patchStatus(taskId, { status: activeTask.status, listId: activeTask.listId, position: overIndex });
           } else {
             // 別カラムのタスク上にドロップ: カラム間移動（上/下半分で挿入位置を決定）
             const targetListName = lists.find(l => l.id === overTask.listId)?.name ?? '';
             const targetStatus = LIST_NAME_TO_STATUS[targetListName] ?? activeTask.status;
-            const targetTasks = columns[targetListName] ?? [];
+            const targetTasks = columns[String(overTask.listId)] ?? [];
             const overIndex = targetTasks.findIndex(t => t.id === overTaskId);
             const activeCenterY = active.rect.current.translated
               ? (active.rect.current.translated.top + active.rect.current.translated.bottom) / 2
@@ -158,23 +157,19 @@ export function KanbanBoard({ onOpenCompleted }: KanbanBoardProps) {
         {!loading && !error && (
           <DndContext sensors={sensors} collisionDetection={collisionDetection} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
             <SortableContext
-              items={columnOrder
-                .map(name => lists.find(l => l.name === name)?.id)
-                .filter((id): id is number => id !== undefined)
-                .map(id => `list-${id}`)
-              }
+              items={columnOrder.map(id => `list-${id}`)}
               strategy={horizontalListSortingStrategy}
             >
             <div className={styles.columns}>
-              {columnOrder.map((listName, index) => {
-                const tasks = columns[listName] ?? [];
-                const list = lists.find(l => l.name === listName);
+              {columnOrder.map((listId, index) => {
+                const list = lists.find(l => String(l.id) === listId);
                 if (!list) return null;
+                const tasks = columns[listId] ?? [];
                 return (
                   <KanbanColumn
-                    key={listName}
+                    key={listId}
                     listId={list.id}
-                    listName={listName}
+                    listName={list.name}
                     tasks={tasks}
                     isSearching={query.trim() !== ''}
                     isOver={overColumnId === list.id}

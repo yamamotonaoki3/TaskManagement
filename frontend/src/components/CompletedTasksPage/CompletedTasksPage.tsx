@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect,useState } from 'react';
+
+import { fetchCompletedTasks, permanentlyDeleteTask,updateTask } from '../../api/taskApi';
 import type { TaskResponse, TaskUpdateRequest } from '../../types/task';
-import { fetchCompletedTasks, updateTask, permanentlyDeleteTask } from '../../api/taskApi';
 import { TaskDetailModal } from '../TaskDetailModal/TaskDetailModal';
 import styles from './CompletedTasksPage.module.css';
 

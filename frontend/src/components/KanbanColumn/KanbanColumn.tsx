@@ -1,7 +1,9 @@
-import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { isAxiosError } from 'axios';
+import { useState } from 'react';
+
 import type { TaskCreateRequest, TaskResponse, TaskUpdateRequest } from '../../types/task';
 import { TaskCard } from '../TaskCard/TaskCard';
 import { TaskCreateModal } from '../TaskCreateModal/TaskCreateModal';
@@ -46,7 +48,7 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, sho
     try {
       await onDeleteList(listId);
     } catch (e: unknown) {
-      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const msg = isAxiosError(e) ? e.response?.data?.message : undefined;
       setDeleteError(msg ?? 'カラムの削除に失敗しました。');
     }
   };

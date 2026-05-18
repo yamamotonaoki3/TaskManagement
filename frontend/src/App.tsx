@@ -1,8 +1,9 @@
-import { useState } from 'react';
 import './App.css';
 
-import { KanbanBoard } from './components/KanbanBoard/KanbanBoard';
+import { useState } from 'react';
+
 import { CompletedTasksPage } from './components/CompletedTasksPage/CompletedTasksPage';
+import { KanbanBoard } from './components/KanbanBoard/KanbanBoard';
 
 type Page = 'board' | 'completed';
 
