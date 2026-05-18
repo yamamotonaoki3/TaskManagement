@@ -2,11 +2,13 @@ package com.taskmanagement.api.list;
 
 import com.taskmanagement.api.task.Task;
 import com.taskmanagement.api.task.TaskRepository;
+import com.taskmanagement.api.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,17 +18,26 @@ public class TaskListService {
 
     private final TaskListRepository taskListRepository;
     private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
 
-    public TaskListService(TaskListRepository taskListRepository, TaskRepository taskRepository) {
+    public TaskListService(
+            TaskListRepository taskListRepository,
+            TaskRepository taskRepository,
+            UserRepository userRepository) {
         this.taskListRepository = taskListRepository;
         this.taskRepository = taskRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
     public TaskListResponse create(TaskListRequest req) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Long userId = userRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("ユーザーが見つかりません: " + email))
+                .getId();
         int nextPosition = taskListRepository.findMaxPosition() + 1;
         TaskList list = new TaskList();
-        list.setUserId(1L);
+        list.setUserId(userId);
         list.setName(req.name());
         list.setPosition(nextPosition);
         list.setCreatedAt(LocalDateTime.now());

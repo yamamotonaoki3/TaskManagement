@@ -1,15 +1,13 @@
 import { useEffect,useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { fetchCompletedTasks, permanentlyDeleteTask,updateTask } from '../../api/taskApi';
 import type { TaskResponse, TaskUpdateRequest } from '../../types/task';
 import { TaskDetailModal } from '../TaskDetailModal/TaskDetailModal';
 import styles from './CompletedTasksPage.module.css';
 
-interface CompletedTasksPageProps {
-  onBack: () => void;
-}
-
-export function CompletedTasksPage({ onBack }: CompletedTasksPageProps) {
+export function CompletedTasksPage() {
+  const navigate = useNavigate();
   const [titleQ, setTitleQ] = useState('');
   const [descQ, setDescQ] = useState('');
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
@@ -130,7 +128,7 @@ export function CompletedTasksPage({ onBack }: CompletedTasksPageProps) {
       </main>
 
       <footer className={styles.footer}>
-        <button className={styles.backButton} onClick={onBack}>
+        <button className={styles.backButton} onClick={() => navigate('/')}>
           ボードに戻る
         </button>
       </footer>

@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useState } from 'react';
+
 import type { TaskResponse, TaskUpdateRequest } from '../../types/task';
 import { TaskDetailModal } from '../TaskDetailModal/TaskDetailModal';
 import styles from './TaskCard.module.css';
