@@ -3,13 +3,12 @@ package com.taskmanagement.api.list;
 import com.taskmanagement.api.task.Task;
 import com.taskmanagement.api.task.TaskRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
@@ -42,7 +41,9 @@ public class TaskListService {
                 .collect(Collectors.toMap(TaskList::getId, l -> l));
         for (int i = 0; i < listIds.size(); i++) {
             TaskList l = listMap.get(listIds.get(i));
-            if (l != null) l.setPosition(i);
+            if (l != null) {
+                l.setPosition(i);
+            }
         }
         taskListRepository.saveAll(lists);
     }
