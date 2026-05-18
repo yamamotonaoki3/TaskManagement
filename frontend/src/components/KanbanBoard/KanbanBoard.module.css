@@ -25,6 +25,29 @@
   margin-top: 40px;
 }
 
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  background-color: #e2e8f0;
+  border-top: 1px solid #cbd5e0;
+}
+
+.addListButton {
+  padding: 8px 24px;
+  background-color: #1f6feb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.addListButton:hover {
+  background-color: #1a5fc8;
+}
+
 .error {
   color: #c53030;
   font-size: 14px;
