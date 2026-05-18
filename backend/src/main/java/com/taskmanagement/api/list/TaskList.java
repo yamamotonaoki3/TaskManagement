@@ -1,6 +1,11 @@
 package com.taskmanagement.api.list;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,17 +31,46 @@ public class TaskList {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    protected TaskList() {}
+    protected TaskList() {
+    }
 
-    public Long getId() { return id; }
-    public Long getUserId() { return userId; }
-    public String getName() { return name; }
-    public int getPosition() { return position; }
-    public boolean isDefault() { return isDefault; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setUserId(Long userId) { this.userId = userId; }
-    public void setName(String name) { this.name = name; }
-    public void setPosition(int position) { this.position = position; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Long getUserId() {
+        return userId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public boolean isDefault() {
+        return isDefault;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

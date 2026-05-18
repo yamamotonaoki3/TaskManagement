@@ -40,7 +40,7 @@ export interface TaskStatusUpdateRequest {
 
 export interface TaskUpdateRequest {
   title?: string;
-  description?: string;
+  description?: string | null;
   dueDate?: string | null;
   priority?: 'high' | 'medium' | 'low';
 }

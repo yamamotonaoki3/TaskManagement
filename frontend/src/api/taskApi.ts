@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import type { ListCreateRequest, ListResponse, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
 
 const api = axios.create({
@@ -18,6 +19,9 @@ export const fetchAllTasks = (): Promise<TaskResponse[]> =>
 export const searchTasks = (q: string): Promise<TaskResponse[]> =>
   api.get<TaskResponse[]>('/tasks/search', { params: { q } }).then((r) => r.data);
 
+export const fetchCompletedTasks = (titleQ: string, descQ: string): Promise<TaskResponse[]> =>
+  api.get<TaskResponse[]>('/tasks/completed', { params: { titleQ, descQ } }).then((r) => r.data);
+
 export const createTask = (data: TaskCreateRequest): Promise<TaskResponse> =>
   api.post<TaskResponse>('/tasks', data).then((r) => r.data);
 
@@ -35,6 +39,9 @@ export const reorderLists = (listIds: number[]): Promise<void> =>
 
 export const archiveTask = (id: number): Promise<void> =>
   api.patch(`/tasks/${id}/archive`).then(() => {});
+
+export const permanentlyDeleteTask = (id: number): Promise<void> =>
+  api.delete(`/tasks/${id}`).then(() => {});
 
 export const deleteList = (id: number): Promise<void> =>
   api.delete(`/lists/${id}`).then(() => {});
