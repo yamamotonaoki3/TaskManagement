@@ -18,6 +18,7 @@ interface KanbanColumnProps {
   isSearching: boolean;
   isOver: boolean;
   showAddButton: boolean;
+  isDefault?: boolean;
   onCreate: (data: TaskCreateRequest) => Promise<void>;
   onUpdate: (id: number, data: TaskUpdateRequest) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
@@ -25,7 +26,7 @@ interface KanbanColumnProps {
   onReorder: (listId: number, taskIds: number[]) => Promise<void>;
 }
 
-export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, onCreate, onUpdate, onDelete, onDeleteList, onReorder }: KanbanColumnProps) {
+export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, showAddButton, isDefault, onCreate, onUpdate, onDelete, onDeleteList, onReorder }: KanbanColumnProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -95,7 +96,9 @@ export function KanbanColumn({ listId, listName, tasks, isSearching, isOver, sho
           {showAddButton && (
             <button className={styles.addButton} onClick={() => setIsModalOpen(true)}>+ 追加</button>
           )}
-          <button className={styles.deleteListButton} onClick={handleDeleteList} title="カラムを削除">✕</button>
+          {!isDefault && (
+            <button className={styles.deleteListButton} onClick={handleDeleteList} title="カラムを削除">✕</button>
+          )}
         </div>
       </div>
       {deleteError && <p className={styles.deleteError}>{deleteError}</p>}

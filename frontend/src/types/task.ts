@@ -4,6 +4,7 @@ export interface ListResponse {
   id: number;
   name: string;
   position: number;
+  isDefault: boolean;
 }
 
 export interface TaskResponse {

@@ -11,6 +11,7 @@ public record TaskListResponse(
         Long userId,
         String name,
         int position,
+        boolean isDefault,
         LocalDateTime createdAt,
         List<TaskSummary> tasks
 ) {
@@ -51,6 +52,7 @@ public record TaskListResponse(
                 list.getUserId(),
                 list.getName(),
                 list.getPosition(),
+                list.isDefault(),
                 list.getCreatedAt(),
                 summaries
         );
