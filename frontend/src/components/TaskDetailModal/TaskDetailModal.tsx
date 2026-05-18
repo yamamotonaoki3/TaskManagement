@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import type { TaskResponse, TaskUpdateRequest } from '../../types/task';
 import styles from './TaskDetailModal.module.css';
 
@@ -35,7 +36,7 @@ export function TaskDetailModal({ task, onClose, onUpdate, onDelete }: TaskDetai
     try {
       await onUpdate(task.id, {
         title: title.trim(),
-        description: description.trim() || null,
+        description: description.trim() || undefined,
         dueDate: dueDate || null,
         priority: priority as 'high' | 'medium' | 'low',
       });

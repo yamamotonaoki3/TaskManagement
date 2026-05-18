@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { fetchAllLists, fetchAllTasks, searchTasks, createTask, updateTaskStatus, updateTask, createList as createListApi, reorderTasks, reorderLists as reorderListsApi, archiveTask, deleteList } from '../api/taskApi';
+import { useCallback,useEffect, useState } from 'react';
+
+import { archiveTask, createList as createListApi, createTask, deleteList,fetchAllLists, fetchAllTasks, reorderLists as reorderListsApi, reorderTasks, searchTasks, updateTask, updateTaskStatus } from '../api/taskApi';
 import type { KanbanColumns, ListCreateRequest, ListResponse, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
 
 export function useTasks() {
@@ -18,13 +19,13 @@ export function useTasks() {
         setLists(fetchedLists);
         const map = new Map<string, TaskResponse[]>();
         for (const list of fetchedLists) {
-          map.set(list.name, []);
+          map.set(String(list.id), []);
         }
         for (const task of tasks) {
-          map.get(task.listName)?.push(task);
+          map.get(String(task.listId))?.push(task);
         }
         setColumns(Object.fromEntries(map));
-        setColumnOrder(fetchedLists.map(l => l.name));
+        setColumnOrder(fetchedLists.map(l => String(l.id)));
         setError(null);
       })
       .catch(() => setError('データの取得に失敗しました。バックエンドが起動しているか確認してください。'))
@@ -72,11 +73,8 @@ export function useTasks() {
   };
 
   const reorderColumns = async (listIds: number[]) => {
-    const optimisticOrder = listIds
-      .map(id => lists.find(l => l.id === id)?.name ?? '')
-      .filter(name => name !== '');
     setLists(listIds.map(id => lists.find(l => l.id === id)!).filter(Boolean));
-    setColumnOrder(optimisticOrder);
+    setColumnOrder(listIds.map(id => String(id)));
     await reorderListsApi(listIds);
     await refresh();
   };
