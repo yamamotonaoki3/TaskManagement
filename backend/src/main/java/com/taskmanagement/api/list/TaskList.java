@@ -20,6 +20,9 @@ public class TaskList {
     @Column(nullable = false)
     private int position;
 
+    @Column(name = "is_default", nullable = false)
+    private boolean isDefault;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -29,6 +32,7 @@ public class TaskList {
     public Long getUserId() { return userId; }
     public String getName() { return name; }
     public int getPosition() { return position; }
+    public boolean isDefault() { return isDefault; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 
     public void setUserId(Long userId) { this.userId = userId; }

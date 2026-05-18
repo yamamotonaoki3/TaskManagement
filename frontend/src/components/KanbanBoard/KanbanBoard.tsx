@@ -164,17 +164,18 @@ export function KanbanBoard() {
             <div className={styles.columns}>
               {columnOrder.map((listName, index) => {
                 const tasks = columns[listName] ?? [];
-                const listId = lists.find(l => l.name === listName)?.id;
-                if (listId === undefined) return null;
+                const list = lists.find(l => l.name === listName);
+                if (!list) return null;
                 return (
                   <KanbanColumn
                     key={listName}
-                    listId={listId}
+                    listId={list.id}
                     listName={listName}
                     tasks={tasks}
                     isSearching={query.trim() !== ''}
-                    isOver={overColumnId === listId}
+                    isOver={overColumnId === list.id}
                     showAddButton={index === 0}
+                    isDefault={list.isDefault}
                     onCreate={create}
                     onUpdate={patchTask}
                     onDelete={deleteTask}

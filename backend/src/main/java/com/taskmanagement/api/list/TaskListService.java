@@ -51,6 +51,9 @@ public class TaskListService {
     public void delete(Long listId) {
         TaskList list = taskListRepository.findById(listId)
                 .orElseThrow(() -> new EntityNotFoundException("リストが見つかりません: " + listId));
+        if (list.isDefault()) {
+            throw new IllegalStateException("デフォルトカラムは削除できません");
+        }
         long taskCount = taskRepository.countByTaskListIdAndArchivedFalse(listId);
         if (taskCount > 0) {
             throw new IllegalStateException("タスクが残っているカラムは削除できません");
