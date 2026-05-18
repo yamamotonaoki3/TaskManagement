@@ -1,11 +1,31 @@
 import axios from 'axios';
 
 import type { ListCreateRequest, ListResponse, TaskCreateRequest, TaskResponse, TaskStatusUpdateRequest, TaskUpdateRequest } from '../types/task';
+import { getToken, removeToken } from './authApi';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
   timeout: 10000,
 });
+
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      removeToken();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  },
+);
 
 export const fetchAllLists = (): Promise<ListResponse[]> =>
   api.get<ListResponse[]>('/lists').then((r) => r.data);
