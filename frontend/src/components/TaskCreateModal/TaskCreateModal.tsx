@@ -47,6 +47,7 @@ export function TaskCreateModal({ listId, onClose, onCreate }: TaskCreateModalPr
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="タスク名を入力"
+              maxLength={100}
               autoFocus
             />
           </label>
@@ -57,6 +58,7 @@ export function TaskCreateModal({ listId, onClose, onCreate }: TaskCreateModalPr
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="説明（任意）"
+              maxLength={2000}
               rows={3}
             />
           </label>
