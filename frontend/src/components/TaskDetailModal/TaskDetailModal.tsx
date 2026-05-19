@@ -24,13 +24,17 @@ export function TaskDetailModal({ task, onClose, onUpdate, onDelete }: TaskDetai
       await onDelete(task.id);
       onClose();
     } catch {
-      setError('削除に失敗しました。もう一度お試しください。');
+      setError('データの保存に失敗しました。時間をおいて再度お試しください');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    if (dueDate && new Date(dueDate) < new Date(new Date().toDateString())) {
+      setError('期限に過去の日付は指定できません');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -42,7 +46,7 @@ export function TaskDetailModal({ task, onClose, onUpdate, onDelete }: TaskDetai
       });
       onClose();
     } catch {
-      setError('保存に失敗しました。もう一度お試しください。');
+      setError('データの保存に失敗しました。時間をおいて再度お試しください');
     } finally {
       setSubmitting(false);
     }
@@ -60,6 +64,7 @@ export function TaskDetailModal({ task, onClose, onUpdate, onDelete }: TaskDetai
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              maxLength={100}
               autoFocus
             />
           </label>
@@ -69,6 +74,7 @@ export function TaskDetailModal({ task, onClose, onUpdate, onDelete }: TaskDetai
               className={styles.textarea}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              maxLength={2000}
               rows={4}
             />
           </label>

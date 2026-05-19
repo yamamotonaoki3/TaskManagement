@@ -214,6 +214,7 @@ export function KanbanBoard() {
                   value={newListName}
                   onChange={(e) => setNewListName(e.target.value)}
                   placeholder="カラム名を入力"
+                  maxLength={30}
                   autoFocus
                   onKeyDown={(e) => { if (e.key === 'Enter') handleCreateList(); }}
                 />

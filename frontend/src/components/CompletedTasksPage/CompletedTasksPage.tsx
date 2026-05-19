@@ -16,6 +16,7 @@ export function CompletedTasksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskResponse | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -23,7 +24,7 @@ export function CompletedTasksPage() {
         const result = await fetchCompletedTasks('', '');
         setTasks(result);
       } catch {
-        setError('データの取得に失敗しました。');
+        setError('データの取得に失敗しました');
       } finally {
         setLoading(false);
       }
@@ -33,12 +34,13 @@ export function CompletedTasksPage() {
 
   const handleSearch = async () => {
     setLoading(true);
+    setHasSearched(true);
     try {
       const result = await fetchCompletedTasks(titleQ, descQ);
       setTasks(result);
       setError(null);
     } catch {
-      setError('データの取得に失敗しました。');
+      setError('データの取得に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -106,7 +108,9 @@ export function CompletedTasksPage() {
         {error && <p className={styles.error}>{error}</p>}
         {loading && <p className={styles.hint}>読み込み中...</p>}
         {!loading && tasks.length === 0 && (
-          <p className={styles.hint}>該当するタスクが見つかりませんでした。</p>
+          <p className={styles.hint}>
+            {hasSearched ? '該当するタスクはありません' : '完了タスクはありません'}
+          </p>
         )}
         {tasks.length > 0 && (
           <table className={styles.table}>
