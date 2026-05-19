@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { login, saveToken } from '../../api/authApi';
 import styles from './LoginPage.module.css';
@@ -60,6 +60,9 @@ export function LoginPage() {
             {loading ? 'ログイン中...' : 'ログイン'}
           </button>
         </form>
+        <p className={styles.link}>
+          アカウントをお持ちでない方は<Link to="/register">こちらから登録</Link>
+        </p>
       </div>
     </div>
   );

@@ -6,6 +6,14 @@ export interface LoginResponse {
   token: string;
 }
 
+export async function register(email: string, password: string): Promise<LoginResponse> {
+  const res = await axios.post<LoginResponse>('http://localhost:8080/api/auth/register', {
+    email,
+    password,
+  });
+  return res.data;
+}
+
 export async function login(email: string, password: string): Promise<LoginResponse> {
   const res = await axios.post<LoginResponse>('http://localhost:8080/api/auth/login', {
     email,
