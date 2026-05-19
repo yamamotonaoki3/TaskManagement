@@ -2,12 +2,14 @@ import { useEffect,useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { fetchCompletedTasks, permanentlyDeleteTask,updateTask } from '../../api/taskApi';
+import { useAuth } from '../../hooks/useAuth';
 import type { TaskResponse, TaskUpdateRequest } from '../../types/task';
 import { TaskDetailModal } from '../TaskDetailModal/TaskDetailModal';
 import styles from './CompletedTasksPage.module.css';
 
 export function CompletedTasksPage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [titleQ, setTitleQ] = useState('');
   const [descQ, setDescQ] = useState('');
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
@@ -67,6 +69,9 @@ export function CompletedTasksPage() {
     <div className={styles.wrapper}>
       <header className={styles.header}>
         <h1 className={styles.title}>完了タスク一覧</h1>
+        <button className={styles.logoutButton} onClick={logout}>
+          ログアウト
+        </button>
       </header>
 
       <div className={styles.searchArea}>

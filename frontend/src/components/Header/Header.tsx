@@ -1,3 +1,4 @@
+import { useAuth } from '../../hooks/useAuth';
 import styles from './Header.module.css';
 
 interface HeaderProps {
@@ -6,6 +7,7 @@ interface HeaderProps {
 }
 
 export function Header({ query, onQueryChange }: HeaderProps) {
+  const { logout } = useAuth();
   return (
     <header className={styles.header}>
       <span className={styles.logo}>TaskBoard</span>
@@ -17,6 +19,9 @@ export function Header({ query, onQueryChange }: HeaderProps) {
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
         />
+        <button className={styles.logoutButton} onClick={logout}>
+          ログアウト
+        </button>
       </div>
     </header>
   );
