@@ -40,8 +40,14 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setNickname(request.nickname());
         userRepository.save(user);
         String token = jwtUtil.generateToken(request.email());
         return Optional.of(new LoginResponse(token));
+    }
+
+    public Optional<MeResponse> getCurrentUser(String email) {
+        return userRepository.findByEmail(email)
+                .map(u -> new MeResponse(u.getEmail(), u.getNickname()));
     }
 }

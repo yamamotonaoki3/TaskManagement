@@ -9,6 +9,7 @@ export function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +22,7 @@ export function RegisterPage() {
     }
     setLoading(true);
     try {
-      const { token } = await register(email, password);
+      const { token } = await register(email, password, nickname);
       saveToken(token);
       navigate('/');
     } catch (err) {
@@ -41,6 +42,19 @@ export function RegisterPage() {
       <div className={styles.card}>
         <h1 className={styles.title}>アカウント登録</h1>
         <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.field}>
+            <label htmlFor="nickname" className={styles.label}>ニックネーム（50文字以内）</label>
+            <input
+              id="nickname"
+              type="text"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              className={styles.input}
+              required
+              maxLength={50}
+              autoComplete="nickname"
+            />
+          </div>
           <div className={styles.field}>
             <label htmlFor="email" className={styles.label}>メールアドレス</label>
             <input

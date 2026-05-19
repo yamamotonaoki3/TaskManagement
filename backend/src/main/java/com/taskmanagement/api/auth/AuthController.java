@@ -3,6 +3,8 @@ package com.taskmanagement.api.auth;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,5 +30,12 @@ public class AuthController {
         return authService.register(request)
                 .map(resp -> ResponseEntity.status(HttpStatus.CREATED).body(resp))
                 .orElse(ResponseEntity.status(HttpStatus.CONFLICT).build());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<MeResponse> getCurrentUser(Authentication authentication) {
+        return authService.getCurrentUser(authentication.getName())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
