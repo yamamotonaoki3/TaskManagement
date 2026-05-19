@@ -16,8 +16,16 @@ export function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    if (!confirmPassword) {
+      setError('確認用パスワードを入力してください');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('パスワードが一致しません');
+      return;
+    }
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError('パスワードは英字と数字を含めてください');
       return;
     }
     setLoading(true);
@@ -28,7 +36,7 @@ export function RegisterPage() {
     } catch (err) {
       const status = (err as { response?: { status?: number } }).response?.status;
       if (status === 409) {
-        setError('このメールアドレスはすでに登録されています');
+        setError('このメールアドレスは既に登録されています');
       } else {
         setError('登録に失敗しました。しばらく経ってから再度お試しください');
       }
@@ -68,7 +76,7 @@ export function RegisterPage() {
             />
           </div>
           <div className={styles.field}>
-            <label htmlFor="password" className={styles.label}>パスワード（8文字以上）</label>
+            <label htmlFor="password" className={styles.label}>パスワード（8〜64文字、英字と数字を含む）</label>
             <input
               id="password"
               type="password"
@@ -77,6 +85,7 @@ export function RegisterPage() {
               className={styles.input}
               required
               minLength={8}
+              maxLength={64}
               autoComplete="new-password"
             />
           </div>
@@ -88,8 +97,8 @@ export function RegisterPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className={styles.input}
-              required
               minLength={8}
+              maxLength={64}
               autoComplete="new-password"
             />
           </div>

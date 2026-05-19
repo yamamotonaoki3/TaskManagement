@@ -37,7 +37,7 @@ export function Header() {
       setEditing(false);
       setError('');
     } catch {
-      setError('保存に失敗しました。もう一度お試しください');
+      setError('データの保存に失敗しました。時間をおいて再度お試しください');
     }
   }
 
