@@ -37,9 +37,13 @@ export function Header({ query, onQueryChange }: HeaderProps) {
       setError('50文字以内で入力してください');
       return;
     }
-    await updateNickname(trimmed);
-    setEditing(false);
-    setError('');
+    try {
+      await updateNickname(trimmed);
+      setEditing(false);
+      setError('');
+    } catch {
+      setError('保存に失敗しました。もう一度お試しください');
+    }
   }
 
   return (
