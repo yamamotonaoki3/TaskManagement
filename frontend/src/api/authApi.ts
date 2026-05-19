@@ -35,6 +35,15 @@ export async function fetchMe(): Promise<MeResponse> {
   return res.data;
 }
 
+export async function updateNickname(nickname: string): Promise<MeResponse> {
+  const res = await axios.patch<MeResponse>(
+    'http://localhost:8080/api/auth/me/nickname',
+    { nickname },
+    { headers: { Authorization: `Bearer ${getToken()}` } },
+  );
+  return res.data;
+}
+
 export function saveToken(token: string): void {
   localStorage.setItem(TOKEN_KEY, token);
 }

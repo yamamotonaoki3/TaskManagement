@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { fetchMe, getToken, removeToken } from '../api/authApi';
+import { fetchMe, getToken, removeToken, updateNickname as updateNicknameApi } from '../api/authApi';
 
 export function useAuth() {
   const navigate = useNavigate();
@@ -25,5 +25,10 @@ export function useAuth() {
     return getToken() !== null;
   }
 
-  return { logout, isAuthenticated, nickname };
+  async function updateNickname(newNickname: string): Promise<void> {
+    const me = await updateNicknameApi(newNickname);
+    setNickname(me.nickname);
+  }
+
+  return { logout, isAuthenticated, nickname, updateNickname };
 }
