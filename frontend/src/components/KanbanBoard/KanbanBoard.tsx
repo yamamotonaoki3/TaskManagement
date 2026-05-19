@@ -148,7 +148,7 @@ export function KanbanBoard() {
 
   return (
     <div className={styles.wrapper}>
-      <Header query={query} onQueryChange={setQuery} />
+      <Header />
       <main className={styles.board}>
         {loading && <p className={styles.status}>読み込み中...</p>}
         {error && <p className={styles.error}>{error}</p>}
@@ -187,6 +187,13 @@ export function KanbanBoard() {
         )}
       </main>
       <footer className={styles.footer}>
+        <input
+          type="search"
+          className={styles.search}
+          placeholder="タスクを検索..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
         <button className={styles.addListButton} onClick={() => setShowAddList(true)}>
           ＋ タスクリスト追加
         </button>

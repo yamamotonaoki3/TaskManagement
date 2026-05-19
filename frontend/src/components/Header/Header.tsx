@@ -3,12 +3,7 @@ import { useRef, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import styles from './Header.module.css';
 
-interface HeaderProps {
-  query: string;
-  onQueryChange: (q: string) => void;
-}
-
-export function Header({ query, onQueryChange }: HeaderProps) {
+export function Header() {
   const { logout, nickname, updateNickname } = useAuth();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
@@ -50,13 +45,6 @@ export function Header({ query, onQueryChange }: HeaderProps) {
     <header className={styles.header}>
       <span className={styles.logo}>TaskBoard</span>
       <div className={styles.right}>
-        <input
-          type="search"
-          className={styles.search}
-          placeholder="タスクを検索..."
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-        />
         {nickname && !editing && (
           <span className={styles.nicknameWrapper}>
             <span className={styles.nickname}>{nickname}</span>
