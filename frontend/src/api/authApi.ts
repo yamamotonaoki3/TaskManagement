@@ -6,10 +6,16 @@ export interface LoginResponse {
   token: string;
 }
 
-export async function register(email: string, password: string): Promise<LoginResponse> {
+export interface MeResponse {
+  email: string;
+  nickname: string;
+}
+
+export async function register(email: string, password: string, nickname: string): Promise<LoginResponse> {
   const res = await axios.post<LoginResponse>('http://localhost:8080/api/auth/register', {
     email,
     password,
+    nickname,
   });
   return res.data;
 }
@@ -18,6 +24,13 @@ export async function login(email: string, password: string): Promise<LoginRespo
   const res = await axios.post<LoginResponse>('http://localhost:8080/api/auth/login', {
     email,
     password,
+  });
+  return res.data;
+}
+
+export async function fetchMe(): Promise<MeResponse> {
+  const res = await axios.get<MeResponse>('http://localhost:8080/api/auth/me', {
+    headers: { Authorization: `Bearer ${getToken()}` },
   });
   return res.data;
 }

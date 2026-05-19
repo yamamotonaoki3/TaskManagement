@@ -7,7 +7,7 @@ interface HeaderProps {
 }
 
 export function Header({ query, onQueryChange }: HeaderProps) {
-  const { logout } = useAuth();
+  const { logout, nickname } = useAuth();
   return (
     <header className={styles.header}>
       <span className={styles.logo}>TaskBoard</span>
@@ -19,6 +19,7 @@ export function Header({ query, onQueryChange }: HeaderProps) {
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
         />
+        {nickname && <span className={styles.nickname}>{nickname}</span>}
         <button className={styles.logoutButton} onClick={logout}>
           ログアウト
         </button>

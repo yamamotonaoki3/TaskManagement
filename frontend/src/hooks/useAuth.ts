@@ -1,12 +1,23 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { getToken, removeToken } from '../api/authApi';
+import { fetchMe, getToken, removeToken } from '../api/authApi';
 
 export function useAuth() {
   const navigate = useNavigate();
+  const [nickname, setNickname] = useState<string>('');
+
+  useEffect(() => {
+    if (getToken()) {
+      fetchMe()
+        .then((me) => setNickname(me.nickname))
+        .catch(() => setNickname(''));
+    }
+  }, []);
 
   function logout() {
     removeToken();
+    setNickname('');
     navigate('/login');
   }
 
@@ -14,5 +25,5 @@ export function useAuth() {
     return getToken() !== null;
   }
 
-  return { logout, isAuthenticated };
+  return { logout, isAuthenticated, nickname };
 }

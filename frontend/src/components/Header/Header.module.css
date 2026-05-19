@@ -40,6 +40,11 @@
   gap: 12px;
 }
 
+.nickname {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .logoutButton {
   padding: 5px 14px;
   border: 1px solid rgba(255, 255, 255, 0.7);
