@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useState } from 'react';
+import { type CSSProperties, useState } from 'react';
 
 import type { TaskResponse, TaskUpdateRequest } from '../../types/task';
 import { TaskDetailModal } from '../TaskDetailModal/TaskDetailModal';
@@ -11,6 +11,31 @@ const PRIORITY_LABEL: Record<string, string> = {
   medium: '中',
   low: '低',
 };
+
+function getDueDateStyle(
+  dueDate: string | null | undefined,
+  status: string,
+): { cardStyle: CSSProperties; dueTextStyle: CSSProperties } | undefined {
+  if (status === 'done' || !dueDate) return undefined;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+  const daysLeft = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (daysLeft >= 8) return undefined;
+
+  const intensity = Math.min(Math.max((7 - daysLeft) / 7, 0), 1);
+  const saturation = intensity * 80;
+  const lightness = 100 - intensity * 30;
+  const textLightness = 50 - intensity * 10;
+
+  return {
+    cardStyle: { background: `hsl(0, ${saturation}%, ${lightness}%)` },
+    dueTextStyle: { color: `hsl(0, ${intensity * 90}%, ${textLightness}%)` },
+  };
+}
 
 interface TaskCardProps {
   task: TaskResponse;
@@ -24,7 +49,12 @@ export function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
     id: task.id,
     attributes: { roleDescription: 'draggable task card' },
   });
-  const style = { transform: CSS.Transform.toString(transform), transition };
+  const dueDateStyle = getDueDateStyle(task.dueDate, task.status);
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    ...dueDateStyle?.cardStyle,
+  };
 
   return (
     <>
@@ -58,7 +88,7 @@ export function TaskCard({ task, onUpdate, onDelete }: TaskCardProps) {
         </div>
         <p className={styles.title}>{task.title}</p>
         {task.dueDate && (
-          <p className={styles.due}>期限: {task.dueDate}</p>
+          <p className={styles.due} style={dueDateStyle?.dueTextStyle}>期限: {task.dueDate}</p>
         )}
       </div>
       {isDetailOpen && (
