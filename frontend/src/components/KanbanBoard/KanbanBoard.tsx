@@ -45,7 +45,14 @@ export function KanbanBoard() {
         ),
       });
     }
-    return rectIntersection(args);
+    // タスクのドラッグ時は、カラム並べ替え用の sortable（list-）を当たり判定から除外する。
+    // 除外しないと空のカラムでは list- が col- より優先され、ドロップが無視される。
+    return rectIntersection({
+      ...args,
+      droppableContainers: args.droppableContainers.filter(
+        c => !String(c.id).startsWith('list-')
+      ),
+    });
   }, []);
 
   const handleDragStart = (event: DragStartEvent) => {
