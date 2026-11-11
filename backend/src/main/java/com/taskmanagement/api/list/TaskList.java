@@ -70,6 +70,10 @@ public class TaskList {
         this.position = position;
     }
 
+    public void setDefault(boolean isDefault) {
+        this.isDefault = isDefault;
+    }
+
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
