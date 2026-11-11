@@ -1,2 +1,8 @@
 .claude/
 frontend/.vite/
+
+# 秘密情報（テンプレートの *.example のみコミットする）
+.env
+.env.*
+!.env.example
+!.env.*.example

@@ -43,11 +43,13 @@ backend/
 
 ```sh
 cd backend
+cp .env.example .env   # 初回のみ。各値を設定する（.env はコミットしない）
 docker compose up -d
 ```
 
 `taskboard-db` コンテナが起動する（`docker ps` で確認）。
-- DB 名 / ユーザー / パスワード はすべて `taskboard`（学習用の簡易値）
+- DB 名 / ユーザー / パスワード と JWT シークレットは `backend/.env` で設定する（項目は `.env.example` を参照）
+- `docker-compose.yml` と `application.yml` は、どちらも `.env` の値を参照する
 - ポート 5432 で待ち受け
 
 停止：`docker compose down`（`-v` を付けるとデータボリュームも削除）
