@@ -201,11 +201,14 @@ TaskManagement/
 前提: Docker Desktop が起動していること
 
 ```sh
-# 1. PostgreSQL を起動
+# 1. 秘密情報の設定ファイルを作成し、各値を設定する（初回のみ）
 cd backend
+cp .env.example .env
+
+# 2. PostgreSQL を起動
 docker compose up -d
 
-# 2. アプリを起動（Windows PowerShell）
+# 3. アプリを起動（Windows PowerShell）
 .\gradlew.bat bootRun
 
 # Mac / Linux
@@ -213,7 +216,9 @@ docker compose up -d
 ```
 
 - 起動後、`http://localhost:8080` でアクセス可能
-- DB 接続情報（学習用）: DB名・ユーザー・パスワードすべて `taskboard`、ポート `5432`
+- DB 接続情報と JWT シークレットは `backend/.env` で設定する（`.gitignore` 対象。項目は `backend/.env.example` を参照）
+  - `docker-compose.yml` と `application.yml` は、どちらも `.env` の値を参照する
+  - DB のポートは `5432`
 - 停止: `Ctrl+C`（アプリ）、`docker compose down`（DB）
 
 ```sh
