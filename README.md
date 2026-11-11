@@ -1,47 +1,107 @@
 # TaskManagement
 
 Trello 風カンバンボードで個人タスクを視覚的に管理する Web アプリ。
-React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.3 + PostgreSQL 17（バックエンド）で構成する。
+React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.9 + PostgreSQL 17（バックエンド）で構成する。
+
+---
+
+## デモ
+
+### ユーザー登録
+
+ニックネーム・メールアドレス・パスワードを入力して登録すると、そのままボードへ遷移します。パスワード欄は表示/非表示を切り替えられ、登録直後のボードにはデフォルトカラム（やること・進行中・完了）が用意されます。
+
+![ユーザー登録](docs/images/01-register.gif)
+
+### タスクの追加
+
+タイトル・説明・期限・優先度を入力してタスクを追加します。優先度はバッジで表示され、期限が近いタスクほどカードが赤くなります。
+
+![タスクの追加](docs/images/02-add-task.gif)
+
+### ドラッグ&ドロップ
+
+タスクをドラッグして、カラム間の移動やカラム内の並べ替えができます。「完了」カラムへ移動すると、ステータスも完了になります。
+
+![ドラッグ&ドロップ](docs/images/03-dnd.gif)
+
+### 完了タスク一覧・検索
+
+完了したタスクを完了日の新しい順に一覧表示し、タイトル・説明文のキーワードで絞り込めます。
+
+![完了タスク一覧・検索](docs/images/04-completed.gif)
+
+> デモで使用しているユーザー・タスクはすべて架空のテストデータです。
 
 ---
 
 ## 機能フェーズ
 
-| フェーズ | 内容 | 主な機能 |
-| --- | --- | --- |
-| Phase 1 | MVP | カード追加・表示・移動・削除 |
-| Phase 2 | 基本機能拡張 | 期限・説明文・ドラッグ&ドロップ・アーカイブ |
-| Phase 3 | ユーザー機能 | メール+パスワード認証（登録・ログイン・ログアウト） |
-| Phase 4 | 便利機能 | 優先度・並び替え・期限警告色・履歴検索 |
-| Phase 5 | グループ機能 | グループ作成・メンバー招待・タスク共有 |
+| フェーズ | 内容 | 主な機能 | 状況 |
+| --- | --- | --- | --- |
+| Phase 1 | MVP | カード追加・表示・移動・削除 | ✅ 完了 |
+| Phase 2 | 基本機能拡張 | 期限・説明文・ドラッグ&ドロップ・アーカイブ | ✅ 完了 |
+| Phase 3 | ユーザー機能 | メール+パスワード認証・ニックネーム・完了タスク一覧 | ✅ 完了 |
+| Phase 4 | 便利機能 | 優先度・並び替え・期限警告色・履歴検索 | 🔄 一部完了 |
+| Phase 5 | グループ機能 | グループ作成・メンバー招待・タスク共有 | 📋 要件定義のみ |
+
+---
+
+## 実装済み機能（2026-11-11 時点）
+
+### Phase 1 / Phase 2
+
+- カンバンボードでのタスク管理（追加・編集・削除）
+- カラム（タスクリスト）の追加・削除
+- タスクの期限・説明文の設定
+- ドラッグ&ドロップによるタスク並び替え・カラム間移動・カラム順序変更
+- タスク完了操作とアーカイブ
+
+### Phase 3
+
+- メールアドレス＋パスワードによるユーザー登録・ログイン・ログアウト
+- パスワード入力欄の表示/非表示トグル
+- JWT による API 認証（Spring Security）
+- カラム・タスクのユーザー単位での分離（他ユーザーのデータは参照・操作不可）
+- 新規登録時のデフォルトカラム自動作成
+- ヘッダーへのニックネーム表示・ニックネーム編集
+- 完了タスク一覧画面（タイトル・説明文による検索対応）
+- タスク検索（フッター配置）
+- デフォルトカラム（やること・進行中・完了）の削除保護
+
+### Phase 4（一部）
+
+- 期限が近づくにつれてタスクカードが徐々に赤くなる警告色表示
 
 ---
 
 ## 技術スタック
 
-### フロントエンド（Phase 1〜）
+### フロントエンド
 
-| 項目 | 内容 |
+| 項目 | バージョン |
 | --- | --- |
-| 言語 | TypeScript 6.0 |
-| ライブラリ | React 19 |
-| ビルドツール | Vite 8 |
-| ルーティング | React Router |
-| HTTP クライアント | Axios（Phase 3〜） |
+| 言語 | TypeScript 6.0.3 |
+| ライブラリ | React 19.2.6 |
+| ビルドツール | Vite 8.3.8 |
+| ルーティング | React Router 7.18.5 |
+| HTTP クライアント | Axios 1.21.1 |
+| DnD | @dnd-kit/core 6.3.1 / @dnd-kit/sortable 10.0.0 |
 | テスト | Vitest + React Testing Library |
-| Lint / Format | ESLint + Prettier |
+| Lint / Format | ESLint 10.14.0 + Prettier |
 
-### バックエンド（Phase 3〜）
+### バックエンド
 
-| 項目 | 内容 |
+| 項目 | バージョン |
 | --- | --- |
 | 言語 | Java 25 |
-| フレームワーク | Spring Boot 4.0.3 |
+| フレームワーク | Spring Boot 4.0.9 |
 | ビルドツール | Gradle 9.5.0（Kotlin DSL） |
 | ORM | Spring Data JPA（Hibernate） |
-| 認証 | Spring Security + JWT |
+| 認証 | Spring Security + JWT（jjwt 0.13.0） |
 | DB マイグレーション | Flyway |
 | テスト | JUnit 5 + Mockito |
+| コード品質 | Checkstyle 10.21.4 |
 
 ### データベース
 
@@ -52,21 +112,84 @@ React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.3 + PostgreS
 
 ---
 
+## API エンドポイント一覧
+
+### 認証 `/api/auth`
+
+| メソッド | パス | 概要 |
+| --- | --- | --- |
+| POST | `/api/auth/register` | ユーザー登録（メール / パスワード / ニックネーム） |
+| POST | `/api/auth/login` | ログイン → JWT トークン返却 |
+| GET | `/api/auth/me` | 現在のユーザー情報取得 |
+| PATCH | `/api/auth/me/nickname` | ニックネーム更新 |
+
+### タスク `/api/tasks`
+
+| メソッド | パス | 概要 |
+| --- | --- | --- |
+| GET | `/api/tasks` | 全タスク取得 |
+| POST | `/api/tasks` | タスク作成 |
+| GET | `/api/tasks/search?q=` | タスク全文検索 |
+| GET | `/api/tasks/completed?titleQ=&descQ=` | 完了タスク検索 |
+| GET | `/api/tasks/{id}` | 個別タスク取得 |
+| PATCH | `/api/tasks/{id}` | タスク編集 |
+| PATCH | `/api/tasks/{id}/status` | ステータス更新（todo / in_progress / done） |
+| PATCH | `/api/tasks/{id}/archive` | タスクアーカイブ |
+| DELETE | `/api/tasks/{id}` | タスク削除 |
+
+### カラム（タスクリスト）`/api/lists`
+
+| メソッド | パス | 概要 |
+| --- | --- | --- |
+| GET | `/api/lists` | 全カラム取得 |
+| POST | `/api/lists` | カラム作成 |
+| PATCH | `/api/lists/reorder` | カラム順序変更 |
+| PATCH | `/api/lists/{listId}/tasks/reorder` | カラム内タスク順序変更 |
+| DELETE | `/api/lists/{listId}` | カラム削除（タスク残存時・デフォルトカラムは不可） |
+
+---
+
 ## リポジトリ構成
 
 ```text
 TaskManagement/
-├── backend/          # Spring Boot アプリケーション
+├── backend/                          # Spring Boot アプリケーション
 │   ├── src/
-│   ├── docker-compose.yml
-│   └── build.gradle.kts
-├── frontend/         # React + TypeScript アプリケーション
+│   │   ├── main/
+│   │   │   ├── java/com/taskmanagement/api/
+│   │   │   │   ├── auth/             # 認証（登録・ログイン・JWT）
+│   │   │   │   ├── task/             # タスク CRUD
+│   │   │   │   ├── list/             # カラム CRUD
+│   │   │   │   ├── user/             # ユーザー管理
+│   │   │   │   └── security/         # JWT フィルター・Spring Security 設定
+│   │   │   └── resources/
+│   │   │       ├── application.yml   # DB 接続・JWT 秘密鍵設定
+│   │   │       └── db/migration/     # Flyway マイグレーションファイル
+│   │   └── test/                     # JUnit 5 テスト
+│   ├── docker-compose.yml            # PostgreSQL 起動定義
+│   └── build.gradle.kts              # Gradle 依存関係
+├── frontend/                         # React + TypeScript アプリケーション
 │   └── src/
-├── docs/             # 要件定義・設計ドキュメント
+│       ├── components/
+│       │   ├── LoginPage/            # ログイン画面
+│       │   ├── RegisterPage/         # ユーザー登録画面
+│       │   ├── KanbanBoard/          # メイン画面（DnD ロジック）
+│       │   ├── KanbanColumn/         # カラム単位コンポーネント
+│       │   ├── TaskCard/             # タスクカード
+│       │   ├── TaskCreateModal/      # タスク作成モーダル
+│       │   ├── TaskDetailModal/      # タスク詳細・編集モーダル
+│       │   ├── CompletedTasksPage/   # 完了タスク一覧画面
+│       │   └── Header/               # ヘッダー（ニックネーム・ログアウト）
+│       ├── api/                      # API 通信層（authApi.ts / taskApi.ts）
+│       ├── hooks/                    # カスタムフック（useAuth / useTasks）
+│       ├── types/                    # TypeScript 型定義
+│       └── router/                   # 認証ガード（ProtectedRoute）
+├── docs/                             # 要件定義・設計ドキュメント
+│   ├── images/                       # README 用デモ GIF
 │   ├── requirements.md
 │   ├── requirements_phase5.md
 │   └── details/
-└── CLAUDE.md         # Claude Code ワークフロールール
+└── CLAUDE.md                         # Claude Code ワークフロールール
 ```
 
 ---
@@ -93,6 +216,11 @@ docker compose up -d
 - DB 接続情報（学習用）: DB名・ユーザー・パスワードすべて `taskboard`、ポート `5432`
 - 停止: `Ctrl+C`（アプリ）、`docker compose down`（DB）
 
+```sh
+# テスト実行（バックエンド）
+.\gradlew.bat test
+```
+
 ### フロントエンド
 
 ```sh
@@ -102,6 +230,11 @@ npm run dev
 ```
 
 - 起動後、`http://localhost:5173` でアクセス可能
+
+```sh
+# テスト実行（フロントエンド）
+npm run test
+```
 
 ---
 
