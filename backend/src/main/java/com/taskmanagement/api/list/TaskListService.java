@@ -1,14 +1,13 @@
 package com.taskmanagement.api.list;
 
+import com.taskmanagement.api.security.CurrentUserProvider;
 import com.taskmanagement.api.task.Task;
 import com.taskmanagement.api.task.TaskRepository;
-import com.taskmanagement.api.user.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,38 +15,44 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class TaskListService {
 
+    /** 新規ユーザー登録時に作成するデフォルトカラム（表示順）。 */
+    static final List<String> DEFAULT_LIST_NAMES = List.of("やること", "進行中", "完了");
+
     private final TaskListRepository taskListRepository;
     private final TaskRepository taskRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserProvider currentUserProvider;
 
     public TaskListService(
             TaskListRepository taskListRepository,
             TaskRepository taskRepository,
-            UserRepository userRepository) {
+            CurrentUserProvider currentUserProvider) {
         this.taskListRepository = taskListRepository;
         this.taskRepository = taskRepository;
-        this.userRepository = userRepository;
+        this.currentUserProvider = currentUserProvider;
     }
 
     @Transactional
     public TaskListResponse create(TaskListRequest req) {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        Long userId = userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException("ユーザーが見つかりません: " + email))
-                .getId();
-        int nextPosition = taskListRepository.findMaxPosition() + 1;
-        TaskList list = new TaskList();
-        list.setUserId(userId);
-        list.setName(req.name());
-        list.setPosition(nextPosition);
-        list.setCreatedAt(LocalDateTime.now());
-        TaskList saved = taskListRepository.save(list);
+        Long userId = currentUserProvider.getCurrentUserId();
+        int nextPosition = taskListRepository.findMaxPositionByUserId(userId) + 1;
+        TaskList saved = taskListRepository.save(newList(userId, req.name(), nextPosition, false));
         return TaskListResponse.from(saved, List.of());
+    }
+
+    /**
+     * 指定ユーザーにデフォルトカラム（削除不可）を作成する。
+     */
+    @Transactional
+    public void createDefaultLists(Long userId) {
+        for (int i = 0; i < DEFAULT_LIST_NAMES.size(); i++) {
+            taskListRepository.save(newList(userId, DEFAULT_LIST_NAMES.get(i), i, true));
+        }
     }
 
     @Transactional
     public void reorderLists(List<Long> listIds) {
-        List<TaskList> lists = taskListRepository.findAllByOrderByPositionAsc();
+        Long userId = currentUserProvider.getCurrentUserId();
+        List<TaskList> lists = taskListRepository.findByUserIdOrderByPositionAsc(userId);
         Map<Long, TaskList> listMap = lists.stream()
                 .collect(Collectors.toMap(TaskList::getId, l -> l));
         for (int i = 0; i < listIds.size(); i++) {
@@ -61,7 +66,8 @@ public class TaskListService {
 
     @Transactional
     public void delete(Long listId) {
-        TaskList list = taskListRepository.findById(listId)
+        Long userId = currentUserProvider.getCurrentUserId();
+        TaskList list = taskListRepository.findByIdAndUserId(listId, userId)
                 .orElseThrow(() -> new EntityNotFoundException("リストが見つかりません: " + listId));
         if (list.isDefault()) {
             throw new IllegalStateException("デフォルトカラムは削除できません");
@@ -75,14 +81,25 @@ public class TaskListService {
     }
 
     public List<TaskListResponse> findAll() {
-        List<TaskList> lists = taskListRepository.findAllByOrderByPositionAsc();
+        Long userId = currentUserProvider.getCurrentUserId();
+        List<TaskList> lists = taskListRepository.findByUserIdOrderByPositionAsc(userId);
 
-        List<Task> tasks = taskRepository.findByArchivedFalseOrderByTaskListIdAscPositionAsc();
+        List<Task> tasks = taskRepository.findByTaskListUserIdAndArchivedFalseOrderByTaskListIdAscPositionAsc(userId);
         Map<Long, List<Task>> tasksByListId = tasks.stream()
                 .collect(Collectors.groupingBy(t -> t.getTaskList().getId()));
 
         return lists.stream()
                 .map(list -> TaskListResponse.from(list, tasksByListId.getOrDefault(list.getId(), List.of())))
                 .toList();
+    }
+
+    private static TaskList newList(Long userId, String name, int position, boolean isDefault) {
+        TaskList list = new TaskList();
+        list.setUserId(userId);
+        list.setName(name);
+        list.setPosition(position);
+        list.setDefault(isDefault);
+        list.setCreatedAt(LocalDateTime.now());
+        return list;
     }
 }

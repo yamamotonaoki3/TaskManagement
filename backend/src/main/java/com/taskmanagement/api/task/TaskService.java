@@ -2,6 +2,7 @@ package com.taskmanagement.api.task;
 
 import com.taskmanagement.api.list.TaskList;
 import com.taskmanagement.api.list.TaskListRepository;
+import com.taskmanagement.api.security.CurrentUserProvider;
 import com.taskmanagement.api.task.dto.TaskRequest;
 import com.taskmanagement.api.task.dto.TaskStatusRequest;
 import com.taskmanagement.api.task.dto.TaskUpdateRequest;
@@ -23,28 +24,37 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final TaskListRepository taskListRepository;
+    private final CurrentUserProvider currentUserProvider;
 
-    public TaskService(TaskRepository taskRepository, TaskListRepository taskListRepository) {
+    public TaskService(
+            TaskRepository taskRepository,
+            TaskListRepository taskListRepository,
+            CurrentUserProvider currentUserProvider) {
         this.taskRepository = taskRepository;
         this.taskListRepository = taskListRepository;
+        this.currentUserProvider = currentUserProvider;
+    }
+
+    private Long userId() {
+        return currentUserProvider.getCurrentUserId();
     }
 
     public List<TaskResponse> findAll() {
-        return taskRepository.findByArchivedFalseOrderByTaskListIdAscPositionAsc()
+        return taskRepository.findByTaskListUserIdAndArchivedFalseOrderByTaskListIdAscPositionAsc(userId())
                 .stream()
                 .map(TaskResponse::from)
                 .toList();
     }
 
     public TaskResponse findById(Long id) {
-        Task task = taskRepository.findById(id)
+        Task task = taskRepository.findByIdAndTaskListUserId(id, userId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id));
         return TaskResponse.from(task);
     }
 
     @Transactional
     public TaskResponse create(TaskRequest req) {
-        TaskList list = taskListRepository.findById(req.listId())
+        TaskList list = taskListRepository.findByIdAndUserId(req.listId(), userId())
                 .orElseThrow(
                         () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "List not found: " + req.listId()));
         int nextPos = taskRepository.findMaxPositionByListId(req.listId()) + 1;
@@ -63,11 +73,11 @@ public class TaskService {
 
     @Transactional
     public TaskResponse updateStatus(Long id, TaskStatusRequest req) {
-        Task task = taskRepository.findById(id)
+        Task task = taskRepository.findByIdAndTaskListUserId(id, userId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id));
 
         if (req.listId() != null && !req.listId().equals(task.getTaskList().getId())) {
-            TaskList newList = taskListRepository.findById(req.listId())
+            TaskList newList = taskListRepository.findByIdAndUserId(req.listId(), userId())
                     .orElseThrow(
                             () -> new ResponseStatusException(
                                     HttpStatus.NOT_FOUND, "List not found: " + req.listId()));
@@ -102,7 +112,7 @@ public class TaskService {
 
     @Transactional
     public TaskResponse updateTask(Long id, TaskUpdateRequest req) {
-        Task task = taskRepository.findById(id)
+        Task task = taskRepository.findByIdAndTaskListUserId(id, userId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id));
 
         if (req.title() != null) {
@@ -121,6 +131,9 @@ public class TaskService {
 
     @Transactional
     public void reorderByIds(Long listId, List<Long> taskIds) {
+        if (taskListRepository.findByIdAndUserId(listId, userId()).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "List not found: " + listId);
+        }
         List<Task> tasks = taskRepository.findByTaskListIdAndArchivedFalseOrderByPositionAsc(listId);
         Map<Long, Task> taskMap = tasks.stream().collect(Collectors.toMap(Task::getId, t -> t));
         for (int i = 0; i < taskIds.size(); i++) {
@@ -134,7 +147,7 @@ public class TaskService {
 
     @Transactional
     public void archive(Long id) {
-        Task task = taskRepository.findById(id)
+        Task task = taskRepository.findByIdAndTaskListUserId(id, userId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id));
         task.setArchived(true);
         taskRepository.save(task);
@@ -142,14 +155,13 @@ public class TaskService {
 
     @Transactional
     public void deleteById(Long id) {
-        if (!taskRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id);
-        }
-        taskRepository.deleteById(id);
+        Task task = taskRepository.findByIdAndTaskListUserId(id, userId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found: " + id));
+        taskRepository.delete(task);
     }
 
     public List<TaskResponse> searchCompleted(String titleQ, String descQ) {
-        List<Task> done = taskRepository.findByStatusOrderByCompletedAtDesc("done");
+        List<Task> done = taskRepository.findByTaskListUserIdAndStatusOrderByCompletedAtDesc(userId(), "done");
 
         boolean hasTitleQ = titleQ != null && !titleQ.isBlank();
         boolean hasDescQ = descQ != null && !descQ.isBlank();
@@ -193,15 +205,16 @@ public class TaskService {
     }
 
     public List<TaskResponse> search(String query) {
+        Long userId = userId();
         if (query == null || query.isBlank()) {
-            return taskRepository.findAll()
+            return taskRepository.findByTaskListUserId(userId)
                     .stream()
                     .map(TaskResponse::from)
                     .toList();
         }
 
         SequencedCollection<Task> results = Arrays.stream(query.trim().split("\\s+"))
-                .flatMap(keyword -> taskRepository.searchByKeyword(keyword).stream())
+                .flatMap(keyword -> taskRepository.searchByKeyword(userId, keyword).stream())
                 .collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
 
         return results.stream()
