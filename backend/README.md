@@ -1,99 +1,62 @@
-# TaskBoard Backend (api)
+# TaskManagement Backend
 
-Spring Boot 4.0.3 + Java 25 + Gradle (Kotlin DSL) のバックエンド。
-現在は DB 接続確認用のデモエンドポイントまで実装済み（本ドメインの USER / LIST / CARD は未着手）。
+Java 25 / Spring Boot 4.0.9 / Gradle 9.5.0（Kotlin DSL）によるREST API。
+ユーザー登録・JWT認証・ニックネーム編集・ユーザー単位のカラム/タスク管理・検索を実装している。
 
 ## 構成
 
-```
-backend/
-├─ build.gradle.kts                                 # Gradle ビルド設定
-├─ settings.gradle.kts                              # プロジェクト名（api）
-├─ docker-compose.yml                               # PostgreSQL 17 コンテナ
-├─ .gitignore
-├─ gradlew / gradlew.bat / gradle/wrapper/          # Gradle Wrapper
-└─ src/
-    ├─ main/
-    │   ├─ java/com/taskmanagement/api/
-    │   │   ├─ Application.java                     # エントリポイント
-    │   │   └─ sample/                              # ※ 使い捨てデモ（本ドメイン実装時に削除予定）
-    │   │       ├─ SampleItem.java                  # JPA エンティティ
-    │   │       ├─ SampleItemRepository.java        # JpaRepository
-    │   │       └─ SampleItemController.java         # REST コントローラ
-    │   └─ resources/
-    │       ├─ application.yml                      # アプリ設定（DB 接続・JPA・Flyway）
-    │       └─ db/migration/
-    │           └─ V1__create_sample_item.sql      # Flyway マイグレーション
-    └─ test/
-        └─ java/com/taskmanagement/api/
-            └─ ApplicationTests.java                # コンテキスト読み込みテスト
-```
+- `src/main/java/com/taskmanagement/api/auth/`：登録・ログイン・現在のユーザー・ニックネーム更新
+- `security/`：JWT認証、BCrypt、ユーザー識別、CORS
+- `user/`、`list/`、`task/`：Entity / Repository / Service / Controller
+- `src/main/resources/application.yml`：DB接続、JWT、Flyway
+- `src/main/resources/db/migration/`：V1〜V12。V4でcard→taskへ改名、V9でsample_itemを削除
+- `src/test/`：コンテキスト読込・ユーザー分離のテスト
+- `config/checkstyle/`：Checkstyle 10.21.4のルール
 
-## 技術スタック
+## セットアップ・起動
 
-- Java 25 / Spring Boot 4.0.3 / Gradle 9.5.0（Kotlin DSL）
-- Spring Web / Spring Data JPA（Hibernate）
-- PostgreSQL 17（Docker）
-- Flyway（DB マイグレーション）
-- **API スタイル**: REST API（JSON over HTTP）
+Java 25とDockerが必要。リポジトリルートから次を実行する。
 
-## セットアップと起動
-
-### 1. PostgreSQL を起動（Docker）
-
-```sh
+```powershell
 cd backend
-cp .env.example .env   # 初回のみ。各値を設定する（.env はコミットしない）
+# 初回のみ。既存 .env がある場合はコピーしない
+Copy-Item .env.example .env
+# .env の各値を設定してから起動
+# JWT_SECRET はHS256で使える十分な長さ（32バイト以上）の専用値にする
 docker compose up -d
+.\gradlew.bat bootRun
 ```
 
-`taskboard-db` コンテナが起動する（`docker ps` で確認）。
-- DB 名 / ユーザー / パスワード と JWT シークレットは `backend/.env` で設定する（項目は `.env.example` を参照）
-- `docker-compose.yml` と `application.yml` は、どちらも `.env` の値を参照する
-- ポート 5432 で待ち受け
+macOS/Linuxは初回コピーに `cp .env.example .env`、起動に `./gradlew bootRun` を使用する。
+APIは `http://localhost:8080/api`。フロントエンドは別ターミナルで起動する（[手順](../frontend/README.md)）。
 
-停止：`docker compose down`（`-v` を付けるとデータボリュームも削除）
+- `backend/.env` でPOSTGRES_DB / POSTGRES_USER / POSTGRES_PASSWORD / JWT_SECRETを指定する。実値はGitへ追加しない。
+- Composeは `taskboard-db`、ホスト5432、名前付きデータボリュームを使用。既存開発データと混ぜたくない場合は専用環境と接続先を別途用意する。
+- Springはbackendを作業ディレクトリとして `.env` を読み込む。Flywayが未適用マイグレーションを順に適用し、Hibernateはスキーマをvalidateする。
+- 過去のマイグレーションには試験ユーザー・タスクの投入がある。公開運用向けの初期化手順ではない。
+- アプリはCtrl+C、DBは `docker compose down` で停止。通常停止にボリューム削除オプションは付けない。
 
-### 2. アプリを起動
+## APIの確認
 
-```sh
-cd backend
-./gradlew.bat bootRun        # Windows（PowerShell では .\gradlew.bat bootRun）
-./gradlew bootRun            # Mac/Linux
+[ルートREADMEのAPI一覧](../README.md#api-エンドポイント一覧)を参照。
+フロント画面で架空アカウントを登録し、タスク作成・更新を確認できる。APIを直接呼ぶ場合は登録/ログイン応答のJWTをBearerヘッダーへ指定する。認証情報やJWTを画面共有・ログ・資料へ貼らない。
+
+- `POST /api/auth/register` は成功時201とJWTを返す。登録時に初期3カラムを作成する。
+- `GET /api/auth/me`、`PATCH /api/auth/me/nickname` は認証済みのユーザー情報を前提とする。
+- タスク/カラムの操作はログインユーザーのデータに限定する。
+- 旧 `/api/sample-items` とsampleパッケージは存在しない。既適用マイグレーションV1を削除・置換する手順は実施しない。
+
+## 検証
+
+backendで実行する。統合テストには接続可能なPostgreSQLとDB/JWT設定が必要。テスト用には本番・既存開発用と分離したDBを使用する。
+
+```powershell
+.\gradlew.bat test checkstyleMain checkstyleTest
 ```
 
-- 起動時に Flyway が `V1__create_sample_item.sql` を適用する
-- ログに `Started Application in X.X seconds` が出れば起動成功
-- 停止は Ctrl+C
+macOS/Linuxは `./gradlew test checkstyleMain checkstyleTest`。
+テストはSpring Boot Test（JUnit Platform、Mockito等を含むstarter-test）で実行する。
 
-### 3. 動作確認（DB 接続確認）
+## 現行の制約
 
-```sh
-# 一覧（最初は空）
-curl http://localhost:8080/api/sample-items
-
-# 1件作成
-curl -X POST http://localhost:8080/api/sample-items -H "Content-Type: application/json" -d "{\"name\":\"hello\"}"
-
-# 再度一覧（作成した行が返る）
-curl http://localhost:8080/api/sample-items
-```
-
-ブラウザで `http://localhost:8080/api/sample-items` を開くと JSON が表示される。
-
-DB を直接確認したい場合：
-
-```sh
-docker compose exec db psql -U taskboard -d taskboard -c "SELECT * FROM sample_item;"
-```
-
-## テスト実行
-
-```sh
-./gradlew test
-```
-
-## 注意
-
-- `sample/` パッケージと `V1__create_sample_item.sql` は **DB 接続確認用の使い捨て**。本ドメイン（USER / LIST / CARD）の実装に着手する際に削除し、本来のマイグレーション（`V2__...`）に置き換える予定。
-- ホスティング先は未定（候補：Render / Railway / AWS）。
+[現行実装との対応表](../docs/implementation-status.md)に、削除とアーカイブの使い分け、期限クリア、検索、認証・運用上の制約をまとめている。本番ホスティング・HTTPS・自動バックアップ等は設定されていない。

@@ -9,7 +9,7 @@ React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.9 + PostgreS
 
 ### ユーザー登録
 
-ニックネーム・メールアドレス・パスワードを入力して登録すると、そのままボードへ遷移します。パスワード欄は表示/非表示を切り替えられ、登録直後のボードにはデフォルトカラム（やること・進行中・完了）が用意されます。
+ニックネーム・メールアドレス・パスワード・確認用パスワードを入力して登録すると、そのままボードへ遷移します。パスワード欄は表示/非表示を切り替えられ、登録直後のボードにはデフォルトカラム（やること・進行中・完了）が用意されます。
 
 ![ユーザー登録](docs/images/01-register.gif)
 
@@ -47,7 +47,9 @@ React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.9 + PostgreS
 
 ---
 
-## 実装済み機能（2026-11-11 時点）
+## 実装済み機能（2026-11-15 コード照合）
+
+現行の動作・制約・根拠は [現行実装との対応表](docs/implementation-status.md) を参照。フェーズは開発上の区分であり、将来要件全体の実装完了を示すものではない。
 
 ### Phase 1 / Phase 2
 
@@ -55,7 +57,7 @@ React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.9 + PostgreS
 - カラム（タスクリスト）の追加・削除
 - タスクの期限・説明文の設定
 - ドラッグ&ドロップによるタスク並び替え・カラム間移動・カラム順序変更
-- タスク完了操作とアーカイブ
+- タスク完了操作とアーカイブ（ボードから完了タスクを削除した場合。未完了タスクと完了一覧からの削除は物理削除）
 
 ### Phase 3
 
@@ -71,7 +73,10 @@ React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.9 + PostgreS
 
 ### Phase 4（一部）
 
-- 期限が近づくにつれてタスクカードが徐々に赤くなる警告色表示
+- 優先度（高・中・低）の設定と表示
+- 各カラムの優先度順・期限順ソート（タイトル順は未実装）
+- 完了タスクのタイトル・説明文検索（OR部分一致。全角半角は区別する）
+- 期限が近づくにつれてタスクカードが徐々に赤くなる警告色表示（完了は除外）
 
 ---
 
@@ -87,8 +92,8 @@ React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.9 + PostgreS
 | ルーティング | React Router 7.18.5 |
 | HTTP クライアント | Axios 1.21.1 |
 | DnD | @dnd-kit/core 6.3.1 / @dnd-kit/sortable 10.0.0 |
-| テスト | Vitest + React Testing Library |
-| Lint / Format | ESLint 10.14.0 + Prettier |
+| テスト | 自動テスト基盤・testスクリプトは未導入 |
+| Lint | ESLint 10.14.0（Prettierは未導入） |
 
 ### バックエンド
 
@@ -100,7 +105,7 @@ React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.9 + PostgreS
 | ORM | Spring Data JPA（Hibernate） |
 | 認証 | Spring Security + JWT（jjwt 0.13.0） |
 | DB マイグレーション | Flyway |
-| テスト | JUnit 5 + Mockito |
+| テスト | Spring Boot Test / JUnit Platform / Mockito（starter-test） |
 | コード品質 | Checkstyle 10.21.4 |
 
 ### データベース
@@ -127,21 +132,21 @@ React 19 + TypeScript（フロントエンド）と Spring Boot 4.0.9 + PostgreS
 
 | メソッド | パス | 概要 |
 | --- | --- | --- |
-| GET | `/api/tasks` | 全タスク取得 |
+| GET | `/api/tasks` | 自ユーザーの未アーカイブタスク取得 |
 | POST | `/api/tasks` | タスク作成 |
-| GET | `/api/tasks/search?q=` | タスク全文検索 |
+| GET | `/api/tasks/search?q=` | 自ユーザーのタイトル・説明のOR部分一致検索（アーカイブ除外なし） |
 | GET | `/api/tasks/completed?titleQ=&descQ=` | 完了タスク検索 |
 | GET | `/api/tasks/{id}` | 個別タスク取得 |
 | PATCH | `/api/tasks/{id}` | タスク編集 |
 | PATCH | `/api/tasks/{id}/status` | ステータス更新（todo / in_progress / done） |
 | PATCH | `/api/tasks/{id}/archive` | タスクアーカイブ |
-| DELETE | `/api/tasks/{id}` | タスク削除 |
+| DELETE | `/api/tasks/{id}` | タスクの物理削除（履歴も削除） |
 
 ### カラム（タスクリスト）`/api/lists`
 
 | メソッド | パス | 概要 |
 | --- | --- | --- |
-| GET | `/api/lists` | 全カラム取得 |
+| GET | `/api/lists` | 自ユーザーのカラムと未アーカイブタスク取得 |
 | POST | `/api/lists` | カラム作成 |
 | PATCH | `/api/lists/reorder` | カラム順序変更 |
 | PATCH | `/api/lists/{listId}/tasks/reorder` | カラム内タスク順序変更 |
@@ -165,7 +170,7 @@ TaskManagement/
 │   │   │   └── resources/
 │   │   │       ├── application.yml   # DB 接続・JWT 秘密鍵設定
 │   │   │       └── db/migration/     # Flyway マイグレーションファイル
-│   │   └── test/                     # JUnit 5 テスト
+│   │   └── test/                     # JUnitテスト（starter-test）
 │   ├── docker-compose.yml            # PostgreSQL 起動定義
 │   └── build.gradle.kts              # Gradle 依存関係
 ├── frontend/                         # React + TypeScript アプリケーション
@@ -216,6 +221,7 @@ docker compose up -d
 ```
 
 - 起動後、`http://localhost:8080` でアクセス可能
+- API利用には登録/ログインで取得したJWTのBearer認証が必要（`/me` とニックネーム更新も認証済み情報を前提）
 - DB 接続情報と JWT シークレットは `backend/.env` で設定する（`.gitignore` 対象。項目は `backend/.env.example` を参照）
   - `docker-compose.yml` と `application.yml` は、どちらも `.env` の値を参照する
   - DB のポートは `5432`
@@ -230,15 +236,19 @@ docker compose up -d
 
 ```sh
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
 - 起動後、`http://localhost:5173` でアクセス可能
+- Node.js/npmが必要。依存パッケージのNode.js要件は `frontend/package-lock.json` のenginesを参照
+- APIは `http://localhost:8080/api` 固定、CORS許可元は `http://localhost:5173`。別オリジン配信には設定変更が必要
+- フロントエンドの自動テスト基盤は未導入
 
 ```sh
-# テスト実行（フロントエンド）
-npm run test
+# 静的検証（フロントエンド）
+npm run lint
+npm run build
 ```
 
 ---
@@ -247,10 +257,11 @@ npm run test
 
 | ドキュメント | 内容 |
 | --- | --- |
+| [現行実装との対応表](docs/implementation-status.md) | 実装の根拠・操作上の制約・将来目標との区別 |
 | [要件定義書](docs/requirements.md) | プロジェクト概要・機能要件・非機能要件・技術スタック全体 |
 | [フェーズ5 要件（グループ機能）](docs/requirements_phase5.md) | グループ機能の詳細仕様 |
 | [業務フロー](docs/details/business-flow.md) | タスク登録〜完了のメイン業務サイクル |
-| [ユースケース](docs/details/use-cases.md) | UC-01〜UC-10 の標準形式記述 |
+| [ユースケース](docs/details/use-cases.md) | UC-01〜UC-05 と将来UC-06〜UC-09への参照 |
 | [画面遷移図](docs/details/screen-transitions.md) | 画面間ナビゲーションフロー |
 | [ワイヤーフレーム](docs/details/wireframes.md) | S-01〜S-05 の画面レイアウト |
 | [機能 IPO](docs/details/function-ipo.md) | 各機能の入力・処理・出力一覧 |

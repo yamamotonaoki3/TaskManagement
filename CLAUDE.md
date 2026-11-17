@@ -67,8 +67,8 @@ docs: API 仕様書を追加
 
 ## 技術スタック（参考）
 
-- **Backend:** Java 25 / Spring Boot 4.0.3 / Gradle 9.5.0 (Kotlin DSL) / PostgreSQL 17
-- **Frontend:** React 19.2.6 / TypeScript 6.0.2 / Vite 8.0.12
+- **Backend:** Java 25 / Spring Boot 4.0.9 / Gradle 9.5.0 (Kotlin DSL) / PostgreSQL 17
+- **Frontend:** React 19.2.6 / TypeScript 6.0.3 / Vite 8.3.8（package-lock.json基準）
 - **パッケージ:** `com.taskmanagement.api`
 - **DB 起動:** `cd backend && docker compose up -d`
 - **アプリ起動:** `cd backend && .\gradlew.bat bootRun`
